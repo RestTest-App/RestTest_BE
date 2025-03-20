@@ -2,7 +2,7 @@
 name: BUG ISSUE
 about: 오류 관련 이슈
 title: "[BUG] -"
-labels: "\U0001F41E Bug"
+labels: "\U0001F41E Bug, ✨ Feature"
 assignees: ''
 
 ---
