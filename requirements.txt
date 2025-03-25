@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+
+# db 관련
+sqlalchemy
+pymysql
+python-dotenv
+
+# mysql 관련
+cryptography
