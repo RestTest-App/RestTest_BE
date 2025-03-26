@@ -21,7 +21,7 @@ def startup_event():
     init_db()
 
 HOST = "127.0.0.1"
-PORT = 8000
+PORT = 8080
 
 
 if __name__ == "__main__":
