@@ -7,8 +7,8 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: resttest_mysql
-      MYSQL_USER: resttest
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_USER: resttest_official
+      MYSQL_PASSWORD: ${DB_PASSWORD}
     ports:
       - "3307:3306"
     volumes:
