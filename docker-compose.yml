@@ -1,18 +1,18 @@
 version: "3.9"
 
 services:
-  mysql:
-    image: mysql:8.0
-    restart: always
-    environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      MYSQL_DATABASE: resttest_mysql
-      MYSQL_USER: resttest_official
-      MYSQL_PASSWORD: ${DB_PASSWORD}
-    ports:
-      - "3307:3306"
-    volumes:
-      - mysql-data:/var/lib/mysql
+#  mysql:
+#    image: mysql:8.0
+#    restart: always
+#    environment:
+#      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+#      MYSQL_DATABASE: resttest_mysql
+#      MYSQL_USER: resttest_official
+#      MYSQL_PASSWORD: ${DB_PASSWORD}
+#    ports:
+#      - "3307:3306"
+#    volumes:
+#      - mysql-data:/var/lib/mysql
 
   fastapi:
     build: .
@@ -22,8 +22,8 @@ services:
       - "8080:8080"
     env_file:
       - .env
-    depends_on:
-      - mysql
+#    depends_on:
+#      - mysql
 #    volumes:
 #      - ./:/code
 

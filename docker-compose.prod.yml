@@ -1,0 +1,14 @@
+version: "3.9"
+
+services:
+  fastapi:
+    build:
+      context: .
+      args:
+        MODE: prod
+    image: fastapi-prod
+    command: uvicorn main:app --host 0.0.0.0 --port 8080
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env.prod
