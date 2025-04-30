@@ -1,0 +1,35 @@
+version: "3.9"
+
+services:
+  mysql:
+    image: mysql:8.0
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: resttest_mysql
+      MYSQL_USER: resttest_official
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+
+  fastapi:
+    build:
+      context: .
+      args:
+        MODE: dev
+    container_name: resttest-dev
+    image: resttest-server
+    command: uvicorn main:app --host 0.0.0.0 --port 8080 --reload
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env.dev
+    volumes:
+      - ./:/code
+    depends_on:
+      - mysql
+
+volumes:
+  mysql-data:
