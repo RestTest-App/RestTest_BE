@@ -1,6 +1,6 @@
 # DB 접근을 위한 로직을 작성 (CRUD) DB 접근에 중점
 from sqlalchemy.orm import Session
-from domain.test.entity.test import Test
+from domain.test.entity.exam import Test
 
 class TestRepository:
     def __init__(self, db: Session):
