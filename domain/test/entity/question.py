@@ -15,3 +15,4 @@ class Question(Base):
     answer = Column(Integer, nullable=False, comment="정답")
     option_explanations = Column(JSON, nullable=False, comment="보기 별 해설")
     exam_id = Column(BigInteger, ForeignKey("exam.id"), nullable=False, comment="시험 ID")
+    exam_section_id = Column(BigInteger, ForeignKey("exam_section.id"), nullable=False, comment="과목 고유 식별값")
