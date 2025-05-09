@@ -1,6 +1,6 @@
 from database.base import Base
 from database.session import engine
-from domain.test.entity.test import Test
+from domain.test.entity.exam import Test
 
 def init_db():
     Base.metadata.create_all(bind=engine)
