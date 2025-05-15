@@ -13,3 +13,6 @@ cryptography==44.0.2
 
 python-multipart==0.0.20
 email_validator==2.2.0
+
+# jwt
+python-jose[cryptography]
