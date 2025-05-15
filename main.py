@@ -4,6 +4,8 @@ from starlette.middleware.cors import CORSMiddleware
 from api.v1.routers import router as api_routers
 from database.init_db import init_db
 
+from exception.base import CustomException
+from exception.exception_handler import custom_exception_handler
 app = FastAPI()
 
 app.add_middleware(
@@ -15,6 +17,8 @@ app.add_middleware(
 )
 
 app.include_router(api_routers)
+
+app.add_exception_handler(CustomException, custom_exception_handler)
 
 @app.on_event("startup")
 def startup_event():
