@@ -5,40 +5,62 @@ from jose import jwt
 from jose.exceptions import JWTError, ExpiredSignatureError
 from exception.client_exception import UnauthorizedException
 
-# 토큰 발행
-def create_access_token(
-        data: dict,
-        expires_delta: Optional[timedelta] = None
-) -> str:
-    to_encode = data.copy()
 
-    now_utc = datetime.now(timezone.utc)
-    expire = now_utc + expires_delta if expires_delta else timedelta(minutes=settings.JWT_ACCESS_TOKEN_EXPIRE_MINUTES)
-    to_encode.update({
-        "iat": now_utc,
-        "exp": expire
-    })
+class JWTService:
 
-    encoded_jwt = jwt.encode(
-        to_encode,
-        settings.SECRET_KEY,
-        algorithm=settings.ALGORITHM
-    )
+    def __init__(self):
+        self.algorithm = settings.JWT_ALGORITHM
+        self.secret_key = settings.JWT_SECRET_KEY
+        self.access_token_expire_minutes = settings.JWT_ACCESS_TOKEN_EXPIRE_MINUTES
+        self.refresh_token_expire_minutes = settings.JWT_REFRESH_TOKEN_EXPIRE_MINUTES
 
-    return encoded_jwt
 
-# 토큰 검증
-def verify_access_token(token: str) -> dict:
-    try:
+    def _encode_jwt(self, data: dict, expires_delta: Optional[timedelta] = None) -> str:
+        to_encode = data.copy()
+
+        now = datetime.now(timezone.utc)
+        expire = now + (
+            expires_delta if expires_delta is not None else timedelta(minutes=self.access_token_expire_minutes)
+        )
+
+        to_encode.update({
+            "iat": now,
+            "exp": expire,
+        })
+        return jwt.encode(to_encode, self.secret_key, algorithm=self.algorithm)
+
+
+    # jwt 암호화 해석
+    def _decode_jwt(self, token: str) -> dict:
         payload = jwt.decode(
             token,
-            settings.JWT_SECRET_KEY,
-            algorithms=[settings.JWT_ALGORITHM]
+            self.secret_key,
+            algorithms=[self.algorithm]
         )
         return payload
 
-    except ExpiredSignatureError:
-        raise UnauthorizedException(detail="토큰이 만료되었습니다.")
 
-    except JWTError:
-        raise UnauthorizedException(detail="유효하지 않은 토큰입니다.")
+    # jwt 암호화 래퍼
+    def _create_token(self, data: dict, expires_delta: Optional[timedelta] = None):
+        return self._encode_jwt(data, expires_delta)
+
+
+    # access token 생성
+    def create_access_token(self, data) -> str:
+        return self._create_token(data, self.access_token_expire_minutes)
+
+
+    # refresh token 생성
+    def create_refresh_token(self, data) -> str:
+        return self._create_token(data, self.refresh_token_expire_minutes)
+
+
+    # token 암호화 해독
+    def verify_token(self, token: str) -> dict:
+        try:
+            payload = self._decode_jwt(token)
+            return payload
+        except ExpiredSignatureError:
+            raise UnauthorizedException(detail="토큰이 만료되었습니다.") # 401
+        except JWTError:
+            raise UnauthorizedException(detail="유효하지 않은 토큰입니다.") # 401
