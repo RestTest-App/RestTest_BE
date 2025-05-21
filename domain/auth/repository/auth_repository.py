@@ -29,8 +29,14 @@ class AuthRepository:
     async def get_user_by_id(db: AsyncSession, user_id: int) -> Optional[User]:
         return await db.get(User, user_id)
 
+    # 소셜로그인 방식으로 provider, email로 로그인 하도록 작성
     @staticmethod
     async def get_user_by_email_and_provider(db: AsyncSession, auth_provider: str, email: str) -> User|None:
         user = select(User).where(User.auth_provider == auth_provider, User.email == email)
         result = await db.execute(user)
         return result.scalars().first()
+
+    @staticmethod
+    async def delete_user(db: AsyncSession, user: User):
+        await db.delete(user)
+        await db.commit()

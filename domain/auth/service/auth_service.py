@@ -1,14 +1,17 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.auth.dto.request import SignUpRequest
+from core.security import JWTService
 from domain.auth.dto.user_create_dto import UserCreateDTO
 from domain.auth.repository.auth_repository import AuthRepository
+from domain.auth.repository.token_repository import TokenStore, token_store
 from domain.user.repository.certificate_repository import CertificateRepository
 from exception.client_exception import NotFoundException, ForbiddenException, ConfilctException
 from datetime import datetime, timezone
 
 
 class AuthService:
+
+    _jwt_service = JWTService()
 
     # 사용자 등록
     @staticmethod
@@ -42,3 +45,19 @@ class AuthService:
         user = await AuthRepository.get_user_by_id(db, user_id)
         if not user:
             raise NotFoundException(message="사용자를 찾을 수 없습니다.") # 404
+
+
+    @staticmethod
+    async def sign_out(refresh_token: str, store: TokenStore = token_store) -> None:
+        jwt_service = JWTService()
+        jwt_service.verify_token(refresh_token)
+        if await store.is_revoked(refresh_token):
+            return
+        await store.revoke(refresh_token)
+
+    @staticmethod
+    async def delete_account(user_id: int, db: AsyncSession) -> None:
+        user = await AuthRepository.get_user_by_id(db, user_id)
+        if not user:
+            raise NotFoundException(message="사용자를 찾을 수 없습니다.")
+        await AuthRepository.delete_user(db, user)
