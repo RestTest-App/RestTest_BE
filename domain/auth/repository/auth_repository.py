@@ -28,3 +28,9 @@ class AuthRepository:
     @staticmethod
     async def get_user_by_id(db: AsyncSession, user_id: int) -> Optional[User]:
         return await db.get(User, user_id)
+
+    @staticmethod
+    async def get_user_by_email_and_provider(db: AsyncSession, auth_provider: str, email: str) -> User|None:
+        user = select(User).where(User.auth_provider == auth_provider, User.email == email)
+        result = await db.execute(user)
+        return result.scalars().first()

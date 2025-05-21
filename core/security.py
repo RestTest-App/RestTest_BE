@@ -19,9 +19,10 @@ class JWTService:
         to_encode = data.copy()
 
         now = datetime.now(timezone.utc)
-        expire = now + (
-            expires_delta if expires_delta is not None else timedelta(minutes=self.access_token_expire_minutes)
-        )
+        # expire = now + (
+        #     expires_delta if expires_delta is not None else timedelta(minutes=self.access_token_expire_minutes)
+        # )
+        expire = now + expires_delta
 
         to_encode.update({
             "iat": now,
@@ -47,12 +48,16 @@ class JWTService:
 
     # access token 생성
     def create_access_token(self, data) -> str:
-        return self._create_token(data, self.access_token_expire_minutes)
+        access_delta = timedelta(minutes=self.access_token_expire_minutes)
+        return self._create_token(data, access_delta)
+        # return self._create_token(data, self.access_token_expire_minutes)
 
 
     # refresh token 생성
     def create_refresh_token(self, data) -> str:
-        return self._create_token(data, self.refresh_token_expire_minutes)
+        refresh_delta = timedelta(minutes=self.refresh_token_expire_minutes)
+        return self._create_token(data, refresh_delta)
+        # return self._create_token(data, self.refresh_token_expire_minutes)
 
 
     # token 암호화 해독

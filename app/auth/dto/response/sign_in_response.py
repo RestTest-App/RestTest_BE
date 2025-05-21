@@ -1,8 +1,8 @@
-from pydantic import ConfigDict
+from pydantic import ConfigDict, BaseModel
 
 
-class SignInResponse:
+class SignInResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     access_token: str
-    token_type: str = "bearer"
+    refresh_token: str

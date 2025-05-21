@@ -3,6 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.auth.dto.request import SignUpRequest
 from domain.auth.dto.user_create_dto import UserCreateDTO
 from domain.auth.repository.auth_repository import AuthRepository
+from domain.user.repository.certificate_repository import CertificateRepository
 from exception.client_exception import NotFoundException, ForbiddenException, ConfilctException
 from datetime import datetime, timezone
 
@@ -12,20 +13,26 @@ class AuthService:
     # 사용자 등록
     @staticmethod
     async def create_user(db: AsyncSession, dto: UserCreateDTO):
+        # 이메일 중복 검사
         exist_user = await AuthRepository.get_by_email(db, dto.email)
         if exist_user:
             raise ConfilctException(message="이미 등록된 사용자입니다.") # 409
 
+        # 약관 동의
         if not dto.agree_to_terms:
             raise ForbiddenException(message="약관 동의가 필요합니다.") # 403
+
 
         data = dto.model_dump(
             exclude={"certificates"},
             exclude_none=True
         )
         data.setdefault("created_at", datetime.now(timezone.utc))
-
         user = await AuthRepository.create_user(db, data)
+
+        if dto.certificates:
+            user = await CertificateRepository.add_user_certificate(db, user, dto.certificates)
+
         return user
 
 
