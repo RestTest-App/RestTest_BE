@@ -23,7 +23,7 @@ class NotFoundException(CustomException):
         super().__init__(status.HTTP_404_NOT_FOUND, detail, message)
 
 # 409 Conflict
-class ConfilctException(CustomException):
+class ConflictException(CustomException):
     def __init__(self, detail: str = "Confict", message: str = None):
         super().__init__(status.HTTP_409_CONFLICT, detail, message)
 
