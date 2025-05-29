@@ -21,8 +21,8 @@ app.include_router(api_routers)
 app.add_exception_handler(CustomException, custom_exception_handler)
 
 @app.on_event("startup")
-def startup_event():
-    init_db()
+async def startup_event():
+    await init_db()
 
 HOST = "127.0.0.1"
 PORT = 8080
