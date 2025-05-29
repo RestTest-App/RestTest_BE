@@ -13,6 +13,7 @@ from database.dependency import get_db
 from domain.auth.dto.user_create_dto import UserCreateDTO
 from domain.auth.repository.token_repository import TokenStore, token_store
 from domain.auth.service.auth_service import AuthService
+from domain.auth.service.kakao_auth_service import KakaoAuthService
 from exception.success import created, ok, no_content
 
 router = APIRouter(prefix="/api/v1/auth", tags=["auth"])
@@ -24,30 +25,44 @@ def get_token_store() -> TokenStore:
 
 @router.post("/sign-up", response_model=SignUpResponse)
 async def sign_up(request: SignUpRequest, db: AsyncSession = Depends(get_db)):
-    dto = UserCreateDTO(**request.model_dump())
+    # 카카오에서 정보 받아오기 (email, auth_provider)
+    info = await KakaoAuthService().fetch_kakao_user_info(request.code)
+
+    data = request.model_dump(exclude={"code"})
+    data.update(info)
+
+    dto = UserCreateDTO(**data)
     usecase = SignUpUseCase(db)
     user = await usecase.execute(dto)
-    data = {"sub": str(user.id)}
-    access_token = jwt_service.create_access_token(data)
-    refresh_token = jwt_service.create_refresh_token(data)
 
-    token_data = {"access_token": access_token, "refresh_token": refresh_token}
+    payload = {"sub" : str(user.id)}
+    access_token = jwt_service.create_access_token(payload)
+    refresh_token = jwt_service.create_refresh_token(payload)
+
+    token_data = {
+        "access_token" : access_token,
+        "refresh_token" : refresh_token,
+    }
     return created(data=token_data, message="회원가입 성공")
+
 
 @router.post("/sign-in", response_model=SignInResponse)
 async def sign_in(request: SignInRequest, db: AsyncSession = Depends(get_db)):
-    user = await SignInUseCase(db).execute(request.auth_provider, request.email)
+
+    info = await KakaoAuthService().fetch_kakao_user_info(request.code)
+    usecase = SignInUseCase(db)
+    user = await usecase.execute(info["auth_provider"], info["email"])
+
     payload = {"sub": str(user.id)}
     access_token = jwt_service.create_access_token(payload)
     refresh_token = jwt_service.create_refresh_token(payload)
 
-    return created(
-        data = {
-            "access_token": access_token,
-            "refresh_token": refresh_token
-        },
-        message="로그인 성공"
-    )
+    token_data = {
+        "access_token" : access_token,
+        "refresh_token" : refresh_token,
+    }
+
+    return created(data = token_data, message="로그인 성공")
 
 @router.post("/sign-out")
 async def sign_out(request: SignOutRequest, store: TokenStore = Depends(get_token_store)):

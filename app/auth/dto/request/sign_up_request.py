@@ -2,8 +2,7 @@ from pydantic import BaseModel
 
 
 class SignUpRequest(BaseModel):
-    auth_provider: str
-    email: str
+    code : str # 카카오 인가 코드
     nickname: str
     gender: str
     birthday: str

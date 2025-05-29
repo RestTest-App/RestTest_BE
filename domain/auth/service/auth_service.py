@@ -61,3 +61,6 @@ class AuthService:
         if not user:
             raise NotFoundException(message="사용자를 찾을 수 없습니다.")
         await AuthRepository.delete_user(db, user)
+
+    # @staticmethod
+    # async def fetch_kakao_user_info(db: AsyncSession, email: str):
