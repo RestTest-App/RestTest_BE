@@ -1,5 +1,4 @@
-from sqlalchemy import Column, BigInteger, String, Boolean, DateTime, Integer, JSON
-from sqlalchemy.dialects.mysql import SET
+from sqlalchemy import Column, BigInteger, String, Boolean, DateTime, Integer, JSON, Date
 from database.base import Base
 
 
@@ -11,7 +10,7 @@ class User(Base):
     email = Column(String(255), nullable=False, comment="사용자 이메일")
     nickname = Column(String(50), nullable=False, comment="사용자 닉네임")
     gender = Column(String(10), nullable=False, comment="사용자 성별")
-    birthday = Column(DateTime, nullable=False, comment="사용자 생년월일")
+    birthday = Column(Date, nullable=False, comment="사용자 생년월일")
     job = Column(String(100), nullable=False, comment="사용자 직업")
     agree_to_terms = Column(Boolean, nullable=False, comment="선택약관 동의 여부")
     created_at = Column(DateTime, nullable=False, comment="계정 생성 일시")

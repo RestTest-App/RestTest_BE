@@ -10,11 +10,17 @@ host = os.getenv("DB_HOST")
 port = os.getenv("DB_PORT")
 database = os.getenv("DB_NAME")
 
-# DB_URL = f"mysql+aiomysql://{user}:{password}@{host}:{port}/{database}?charset=utf8mb4"
 DB_URL = (
     f"mysql+aiomysql://{user}:{password}@{host}:{port}/{database}"
     "?charset=utf8mb4"
 )
 
-engine = create_async_engine(DB_URL, echo=True)
+engine = create_async_engine(
+    DB_URL,
+    echo=True,
+    pool_pre_ping=True,
+    connect_args={
+        "charset": "utf8mb4",
+    }
+)
 AsyncSessionLocal = async_sessionmaker(autoflush=False, bind=engine)

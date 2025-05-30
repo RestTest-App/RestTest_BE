@@ -7,7 +7,7 @@ from domain.auth.repository.token_repository import TokenStore, token_store
 from domain.user.repository.certificate_repository import CertificateRepository
 from exception.client_exception import NotFoundException, ForbiddenException, ConfilctException
 from datetime import datetime, timezone
-
+from zoneinfo import ZoneInfo
 
 class AuthService:
 
@@ -30,7 +30,7 @@ class AuthService:
             exclude={"certificates"},
             exclude_none=True
         )
-        data.setdefault("created_at", datetime.now(timezone.utc))
+        data.setdefault("created_at", datetime.now(ZoneInfo("Asia/Seoul"))).isoformat()
         user = await AuthRepository.create_user(db, data)
 
         if dto.certificates:
@@ -47,6 +47,7 @@ class AuthService:
             raise NotFoundException(message="사용자를 찾을 수 없습니다.") # 404
 
 
+    # 로그아웃
     @staticmethod
     async def sign_out(refresh_token: str, store: TokenStore = token_store) -> None:
         jwt_service = JWTService()
@@ -55,12 +56,10 @@ class AuthService:
             return
         await store.revoke(refresh_token)
 
+    # 회원탈퇴
     @staticmethod
     async def delete_account(user_id: int, db: AsyncSession) -> None:
         user = await AuthRepository.get_user_by_id(db, user_id)
         if not user:
             raise NotFoundException(message="사용자를 찾을 수 없습니다.")
         await AuthRepository.delete_user(db, user)
-
-    # @staticmethod
-    # async def fetch_kakao_user_info(db: AsyncSession, email: str):

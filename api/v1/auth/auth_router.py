@@ -23,11 +23,13 @@ jwt_service = JWTService()
 def get_token_store() -> TokenStore:
     return token_store
 
+# 카카오 회원가입
 @router.post("/sign-up", response_model=SignUpResponse)
 async def sign_up(request: SignUpRequest, db: AsyncSession = Depends(get_db)):
     # 카카오에서 정보 받아오기 (email, auth_provider)
-    info = await KakaoAuthService().fetch_kakao_user_info(request.code)
+    info = await KakaoAuthService().fetch_kakao_user_info(code=request.code)
 
+    # 카카오 인가 코드 추가
     data = request.model_dump(exclude={"code"})
     data.update(info)
 
@@ -35,6 +37,7 @@ async def sign_up(request: SignUpRequest, db: AsyncSession = Depends(get_db)):
     usecase = SignUpUseCase(db)
     user = await usecase.execute(dto)
 
+    # token 발급
     payload = {"sub" : str(user.id)}
     access_token = jwt_service.create_access_token(payload)
     refresh_token = jwt_service.create_refresh_token(payload)
@@ -43,6 +46,7 @@ async def sign_up(request: SignUpRequest, db: AsyncSession = Depends(get_db)):
         "access_token" : access_token,
         "refresh_token" : refresh_token,
     }
+
     return created(data=token_data, message="회원가입 성공")
 
 

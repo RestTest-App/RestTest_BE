@@ -27,8 +27,6 @@ services:
       - "8080:8080"
     env_file:
       - .env.dev
-    environment:
-      - OAUTHLIB_INSECURE_TRANSPORT=1
     volumes:
       - ./:/code
     depends_on:
