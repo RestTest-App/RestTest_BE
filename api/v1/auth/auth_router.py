@@ -53,9 +53,10 @@ async def sign_up(request: SignUpRequest, db: AsyncSession = Depends(get_db)):
 @router.post("/sign-in", response_model=SignInResponse)
 async def sign_in(request: SignInRequest, db: AsyncSession = Depends(get_db)):
 
-    info = await KakaoAuthService().fetch_kakao_user_info(request.code)
+    # info = await KakaoAuthService().fetch_kakao_user_info(request.code)
+
     usecase = SignInUseCase(db)
-    user = await usecase.execute(info["auth_provider"], info["email"])
+    user = await usecase.execute(request.code)
 
     payload = {"sub": str(user.id)}
     access_token = jwt_service.create_access_token(payload)
