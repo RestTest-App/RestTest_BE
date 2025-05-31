@@ -42,3 +42,6 @@ class KakaoAuthService:
             raise ForbiddenException("카카오에 등록된 이메일이 없습니다.")
 
         return {"email": email, "auth_provider": "KAKAO"}
+
+    async def fetch_user_into_test(self, code: str) -> dict:
+        return {"email": f"{code}@kakao.com", "auth_provider": "KAKAO"}

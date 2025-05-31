@@ -20,3 +20,16 @@ class SignInUseCase:
         if not user:
             raise UnauthorizedException(message="등록된 소셜 계정이 아닙니다.")
         return user
+
+    # auth test용
+    async def execute_test(self, code: str):
+        kakao_service = KakaoAuthService()
+        info = await kakao_service.fetch_user_into_test(code)
+        user = await AuthRepository.get_user_by_email_and_provider(
+            self.db,
+            auth_provider=info["auth_provider"],
+            email=info["email"]
+        )
+        if not user:
+            raise UnauthorizedException(message="등록된 소셜 계정이 아닙니다.")
+        return user

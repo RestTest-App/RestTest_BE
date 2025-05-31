@@ -53,10 +53,8 @@ async def sign_up(request: SignUpRequest, db: AsyncSession = Depends(get_db)):
 @router.post("/sign-in", response_model=SignInResponse)
 async def sign_in(request: SignInRequest, db: AsyncSession = Depends(get_db)):
 
-    # info = await KakaoAuthService().fetch_kakao_user_info(request.code)
-
     usecase = SignInUseCase(db)
-    user = await usecase.execute(request.code)
+    user = await usecase.execute_(request.code)
 
     payload = {"sub": str(user.id)}
     access_token = jwt_service.create_access_token(payload)
@@ -78,3 +76,60 @@ async def sign_out(request: SignOutRequest, store: TokenStore = Depends(get_toke
 async def delete_account(user_id: int, db: AsyncSession = Depends(get_db)):
     await AuthService.delete_account(user_id, db)
     return no_content()
+
+
+
+
+
+
+
+
+
+
+
+
+# test api
+
+
+@router.post("/sign-up-test", response_model=SignUpResponse)
+async def sign_up_test(request: SignUpRequest, db: AsyncSession = Depends(get_db)):
+    info = await KakaoAuthService().fetch_user_into_test(code=request.code)
+
+    # 카카오 인가 코드 추가
+    data = request.model_dump(exclude={"code"})
+    data.update(info)
+
+    dto = UserCreateDTO(**data)
+    usecase = SignUpUseCase(db)
+    user = await usecase.execute(dto)
+
+    # token 발급
+    payload = {"sub" : str(user.id)}
+    access_token = jwt_service.create_access_token(payload)
+    refresh_token = jwt_service.create_refresh_token(payload)
+
+    token_data = {
+        "access_token" : access_token,
+        "refresh_token" : refresh_token,
+    }
+
+    return created(data=token_data, message="회원가입 성공")
+
+
+
+@router.post("/sign-in-test", response_model=SignInResponse)
+async def sign_in(request: SignInRequest, db: AsyncSession = Depends(get_db)):
+
+    usecase = SignInUseCase(db)
+    user = await usecase.execute_test(request.code)
+
+    payload = {"sub": str(user.id)}
+    access_token = jwt_service.create_access_token(payload)
+    refresh_token = jwt_service.create_refresh_token(payload)
+
+    token_data = {
+        "access_token" : access_token,
+        "refresh_token" : refresh_token,
+    }
+
+    return created(data = token_data, message="로그인 성공")
