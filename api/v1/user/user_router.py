@@ -1,13 +1,12 @@
 from fastapi import APIRouter
 from fastapi.params import Depends
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.dependency import get_current_user
 from app.user.dto.response.get_user_info_response import GetUserInfoResponse
 from core.security import JWTService
 from exception.success import ok
 
-router = APIRouter(prefix='/api/v1/user', tags=["user"])
+router = APIRouter(prefix="/user", tags=["user"])
 
 jwt_service = JWTService()
 
