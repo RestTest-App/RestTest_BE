@@ -6,7 +6,7 @@ from app.user.dto.response.get_user_info_response import GetUserInfoResponse
 from core.security import JWTService
 from exception.success import ok
 
-router = APIRouter(prefix="/user", tags=["user"])
+router = APIRouter()
 
 jwt_service = JWTService()
 

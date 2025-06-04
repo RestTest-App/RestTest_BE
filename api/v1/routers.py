@@ -4,5 +4,5 @@ from api.v1.user import user_router
 
 router = APIRouter(prefix="/api/v1")
 
-router.include_router(auth_router.router, tags=["auth"])
-router.include_router(user_router.router, tags=["user"])
+router.include_router(auth_router.router, tags=["auth"], prefix="/auth")
+router.include_router(user_router.router, tags=["user"], prefix="/user")
