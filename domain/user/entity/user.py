@@ -19,5 +19,5 @@ class User(Base):
     test_goal = Column(Integer, nullable=True, comment="시험모드 목표")
     profile_image = Column(String(255), nullable=True, comment="프로필 이미지 S3 URI")
     total_study_days = Column(Integer, nullable=False, default=0, comment="총 학습일")
-    monthly_study_date = Column(JSON, nullable=False, default={}, comment="학습한 날짜")
+    monthly_study_date = Column(JSON, nullable=False, default=list, comment="학습한 날짜")
     is_study_today = Column(Boolean, nullable=False, default=False, comment="오늘 학습 여부")
