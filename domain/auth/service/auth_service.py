@@ -1,9 +1,12 @@
+from typing import Optional
+
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.security import JWTService
 from domain.auth.dto.user_create_dto import UserCreateDTO
 from domain.auth.repository.auth_repository import AuthRepository
 from domain.auth.repository.token_repository import TokenStore, token_store
+from domain.user.entity import User
 from domain.user.repository.certificate_repository import CertificateRepository
 from exception.client_exception import NotFoundException, ForbiddenException, ConfilctException
 from datetime import datetime, timezone
@@ -41,10 +44,11 @@ class AuthService:
 
     # id로 사용자 조회
     @staticmethod
-    async def get_user_by_id(db: AsyncSession, user_id: int):
-        user = await AuthRepository.get_user_by_id(db, user_id)
+    async def get_user(db: AsyncSession, user_id: int) -> User:
+        user: Optional[User] = await AuthRepository.get_user_by_id(db, user_id)
         if not user:
             raise NotFoundException(message="사용자를 찾을 수 없습니다.") # 404
+        return user
 
 
     # 로그아웃
