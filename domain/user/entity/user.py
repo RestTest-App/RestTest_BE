@@ -1,4 +1,4 @@
-from sqlalchemy import Column, BigInteger, String, Boolean, DateTime, Integer
+from sqlalchemy import Column, BigInteger, String, Boolean, DateTime, Integer, JSON
 from sqlalchemy.dialects.mysql import SET
 from database.base import Base
 from sqlalchemy.dialects.mysql import JSON
@@ -20,11 +20,7 @@ class User(Base):
                              default=5, comment="나의 문제집 생성 제한 횟수")
     rest_goal = Column(Integer, nullable=True, comment="쉬엄모드 목표")
     test_goal = Column(Integer, nullable=True, comment="시험모드 목표")
-    profile_image = Column(String(255), nullable=True,
-                           comment="프로필 이미지 S3 URI")
-    total_study_days = Column(Integer, nullable=False,
-                              default=0, comment="총 학습일")
-    monthly_study_date = Column(
-        JSON, nullable=False, default=list, comment="학습한 날짜")
-    is_study_today = Column(Boolean, nullable=False,
-                            default=False, comment="오늘 학습 여부")
+    profile_image = Column(String(255), nullable=True, comment="프로필 이미지 S3 URI")
+    total_study_days = Column(Integer, nullable=False, default=0, comment="총 학습일")
+    monthly_study_date = Column(JSON, nullable=False, default=list, comment="학습한 날짜"),
+    is_study_today = Column(Boolean, nullable=False, default=False, comment="오늘 학습 여부")
