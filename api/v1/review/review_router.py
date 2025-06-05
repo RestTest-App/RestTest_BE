@@ -7,7 +7,7 @@ from app.review.dto.response.get_review_rest_mode_response import GetReviewRestM
 from app.review.dto.response.get_review_test_mode_response import GetReviewTestModeResponse
 from app.review.usecase.review_usecase import add_review_note_test_mode_usecase, get_review_note_list_usecase, \
     get_review_note_rest_mode_usecase, get_review_note_test_mode_usecase, delete_review_note_usecase
-from core.dependency import get_db
+from database.dependency import get_db
 
 router = APIRouter()
 
