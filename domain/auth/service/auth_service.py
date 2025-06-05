@@ -5,7 +5,7 @@ from domain.auth.dto.user_create_dto import UserCreateDTO
 from domain.auth.repository.auth_repository import AuthRepository
 from domain.auth.repository.token_repository import TokenStore, token_store
 from domain.user.repository.certificate_repository import CertificateRepository
-from exception.client_exception import NotFoundException, ForbiddenException, ConfilctException
+from exception.client_exception import NotFoundException, ForbiddenException, ConflictException
 from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
 
@@ -19,7 +19,7 @@ class AuthService:
         # 이메일 중복 검사
         exist_user = await AuthRepository.get_by_email(db, dto.email)
         if exist_user:
-            raise ConfilctException(message="이미 등록된 사용자입니다.") # 409
+            raise ConflictException(message="이미 등록된 사용자입니다.") # 409
 
         # 약관 동의
         if not dto.agree_to_terms:
