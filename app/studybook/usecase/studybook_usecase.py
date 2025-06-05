@@ -20,8 +20,6 @@ from exception.client_exception import (
 from exception.server_exception import InternalServerErrorException
 from exception.success import created, ok
 
-# 통사 OCR 무료패스
-
 # 401 Unauthorized 처리는 추후 인증 미들웨어와 통합 예정
 # from exception.client_exception import UnauthorizedException
 

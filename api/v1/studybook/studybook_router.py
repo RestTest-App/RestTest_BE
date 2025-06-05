@@ -11,7 +11,7 @@ from app.studybook.dto.response.delete_studybook_response_dto import DeleteStudy
 from app.studybook.usecase.studybook_usecase import upload_my_studybook_by_img_usecase
 
 from domain.user.entity.user import User
-from database.session import get_db
+from database.dependency import get_db
 from app.studybook.usecase.studybook_usecase import upload_my_studybook_by_pdf_usecase, get_my_studybooks_usecase
 from app.studybook.usecase.studybook_usecase import delete_my_studybook_usecase
 
