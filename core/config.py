@@ -25,6 +25,10 @@ class KakaoSettings(BaseSettings):
         env_file_encoding = "utf-8"
         extra = "ignore"
 
+class StorageSetting(BaseSettings):
+    pass
+
+
 
 settings = JwtSetting()
 kakao_settings = KakaoSettings()
