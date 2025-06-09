@@ -59,9 +59,7 @@ jobs:
         username: ec2-user
         key: ${{ secrets.EC2_SSH_KEY }}
         script: |
-          docker pull ${{ env.ECR_REGISTRY }}/${{ env.IMAGE_NAME }}:latest
-          docker stop app || true                  
-          docker rm app || true
+          aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${{ env.ECR_REGISTRY }}
+          docker rm -f app || true
           docker run -d --name app -p 8080:8080 --restart always ${{ env.ECR_REGISTRY }}/${{ env.IMAGE_NAME }}:latest
-        # 기존 컨테이너 중지, 삭제 후 새 컨테이너 실행 ( port 3000, restart )
         
