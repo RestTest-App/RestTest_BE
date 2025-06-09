@@ -12,3 +12,9 @@
 #     service = TestService(db)
 #     tests = service.get_tests()
 #     return [TestResponse.model_validate(t) for t in tests]
+def create_test_usecae():
+    return None
+
+
+def get_tests_usecase():
+    return None
