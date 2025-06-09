@@ -8,7 +8,7 @@ on:
 
 
 env:
-  DOCKER_IMAGE: ${{ secrets.ECR_REPO }}
+  IMAGE_NAME: ${{ secrets.ECR_REPO }}
   ECR_REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
 
 
