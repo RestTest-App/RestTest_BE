@@ -30,7 +30,6 @@ from app.test.dto.response.create_ai_explanation_response import CreateAIExplana
 # 개발자에게 피드백 제출하기
 from app.test.dto.request.send_answer_feedback_request import SendAnswerFeedbackRequest
 from app.test.dto.response.send_answer_feedback_response import SendAnswerFeedbackResponse
-from app.test.usecase.send_answer_feedback_usecase import send_answer_feedback_usecase
 
 router = APIRouter(prefix="/test", tags=["test"])
 
@@ -102,9 +101,3 @@ async def create_ai_explanation(
     current_user: User = Depends(get_current_user)
 ):
     return await create_ai_explanation_usecase(exam_id, db, current_user)
-
-
-# 개발자에게 피드백 제출하기
-@router.post("/send-answer-feedback", response_model=SendAnswerFeedbackResponse)
-def send_answer_feedback(request: SendAnswerFeedbackRequest, db: Session = Depends(get_db)):
-    return send_answer_feedback_usecase(db, request)
