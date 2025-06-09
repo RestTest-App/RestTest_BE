@@ -1,9 +1,16 @@
-name: Deploy on release push
+name: Deploy to AWS EC2
+
 
 on:
   push:
     branches: [ "release" ]  # release 브랜치에 push가 발생했을 때 CI
   workflow_dispatch:
+
+
+env:
+  DOCKER_IMAGE: ${{ secrets.ECR_REPO }}
+  ECR_REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazon.com
+
 
 jobs:
   deploy:
@@ -15,20 +22,35 @@ jobs:
       AWS_REGION: ${{ secrets.AWS_REGION }}
 
     steps:
-    - name: Checkout source code
+    # 소스코드 체크아웃
+    - name: Checkout source
       uses: actions/checkout@v3
 
-    - name: Set up Docker
+    # Docker buildx 설치
+    - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v2
 
+    # 이전에 빌드한 캐시 불러오기
+    - name: Cache Docker layers
+      uses: actions/cache@v2
+      with:
+        key: ${{ runner.os }}-buildx-${{ github.sha }}
+        path: /tmp/.buildx-cache
+        restore-keys: ${{ runner.os }}-buildx-
+
+    # ECR 로그인
     - name: Login to Amazon ECR
       uses: aws-actions/amazon-ecr-login@v1
 
+    # Docker 이미지 빌드 및 ECR에 푸시
     - name: Build and Push Docker Image
-      run: |
-        docker build -t ${{ secrets.ECR_REPO }} .
-        docker tag ${{ secrets.ECR_REPO }}:latest ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_REPO }}:latest
-        docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_REPO }}:latest
+      uses: docker/build-push-action@v4
+      with:
+        context: .
+        push: true
+        tags: ${{ env.ECR_REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+        cache-from: type=local,src=/tmp/.buildx-cache # 기존 캐시 사용
+        cache-to: type=local,dest=/tmp/.buildx-cache-new # 새 캐시 저장
 
     - name: Deploy to EC2 via SSH
       uses: appleboy/ssh-action@v1.0.0
@@ -37,6 +59,8 @@ jobs:
         username: ec2-user
         key: ${{ secrets.EC2_SSH_KEY }}
         script: |
-          docker pull ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_REPO }}:latest
-          docker-compose -f docker-compose.prod.yml down
-          docker-compose -f docker-compose.prod.yml up -d
+          docker pull ${{ env.ECR_REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+          docker stop app || true                  
+          docker rm app || true
+          docker run -d --name app -p 3000:3000 --restart always ${{ env.ECR_REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+        # 기존 컨테이너 중지, 삭제 후 새 컨테이너 실행 ( port 3000, restart )
