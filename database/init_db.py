@@ -1,6 +1,11 @@
+import domain.user.entity
+import domain.test.entity
+import domain.review.entity
+import domain.studybook.entity
+
 from database.base import Base
 from database.session import engine
-from domain.test.entity.test import Test
 
-def init_db():
-    Base.metadata.create_all(bind=engine)
+async def init_db() -> None:
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
