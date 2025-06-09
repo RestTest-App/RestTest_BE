@@ -60,8 +60,6 @@ jobs:
         key: ${{ secrets.EC2_SSH_KEY }}
         script: |
           aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${{ env.ECR_REGISTRY }}
-
-          docker rm -f app || true
-          docker kill $(docker ps -q --filter "publish=8080") || true
-
-          docker run -d --name app -p 8080:8080 --restart always ${{ env.ECR_REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+          docker-compose -f docker-compose.prod.yml down
+          docker-compose -f docker-compose.prod.yml pull
+          docker-compose -f docker-compose.prod.yml up -d
