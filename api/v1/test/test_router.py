@@ -1,7 +1,7 @@
 
 from fastapi import APIRouter, Depends, Path, Query
 from sqlalchemy.orm import Session
-from core.dependency import get_db
+from database.dependency import get_db
 from app.test.dto.request.test_request import TestRequest
 from app.test.dto.response.test_response import TestResponse
 from app.test.usecase.test_usecase import create_test_usecae, get_tests_usecase
@@ -20,7 +20,6 @@ from core.auth import get_current_user
 # 문제 풀기 (쉬엄 모드)
 from app.test.usecase.rest_mode_usecase import rest_mode_usecase
 from app.test.dto.response.rest_mode_response import RestModeResponse
-from core.dependency import get_db
 # 문제 풀기 (오늘의 문제)
 from domain.user.entity.user import User
 from app.test.dto.response.today_questions_response import TodayQuestionsResponse
