@@ -42,7 +42,7 @@ class AuthService:
 
     # id로 사용자 조회
     @staticmethod
-    async def get_user(db: AsyncSession, user_id: int) -> User:
+    async def get_user_by_id(db: AsyncSession, user_id: int) -> User:
         user: Optional[User] = await AuthRepository.get_user_by_id(db, user_id)
         if not user:
             raise NotFoundException(message="사용자를 찾을 수 없습니다.")  # 404
