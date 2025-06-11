@@ -11,7 +11,6 @@ from core.security import JWTService
 # Auth 의존성
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
-
 async def get_current_user(
         token: str = Depends(oauth2_scheme),
         db: AsyncSession = Depends(get_db)
@@ -24,5 +23,4 @@ async def get_current_user(
 
     user_id = payload.get("sub")
     user = AuthService.get_user_by_id(db, int(user_id))
-
     return user

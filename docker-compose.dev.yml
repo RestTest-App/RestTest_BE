@@ -1,10 +1,11 @@
+version: "3.8"
 
 services:
   mysql:
     image: mysql:8.0
     restart: always
     env_file:
-      - .env.dev
+      - .env
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: ${DB_NAME}
@@ -14,6 +15,11 @@ services:
       - "3307:3306"
     volumes:
       - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   fastapi:
     build:
@@ -21,16 +27,17 @@ services:
       args:
         MODE: dev
     container_name: resttest-dev
-    image: resttest-server
     command: uvicorn main:app --host 0.0.0.0 --port 8080 --reload
+    restart: always
     ports:
       - "8080:8080"
     env_file:
-      - .env.dev
+      - .env
     volumes:
       - ./:/code
     depends_on:
-      - mysql
+      mysql:
+        condition: service_healthy
 
 volumes:
   mysql-data:
