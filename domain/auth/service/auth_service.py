@@ -50,8 +50,7 @@ class AuthService:
             raise NotFoundException(message="사용자를 찾을 수 없습니다.") # 404
         return user
 
-
-    # 로그아웃
+        # 로그아웃
     @staticmethod
     async def sign_out(refresh_token: str, store: TokenStore = token_store) -> None:
         jwt_service = JWTService()

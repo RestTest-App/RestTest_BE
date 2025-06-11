@@ -24,6 +24,11 @@ class KakaoAuthService:
             },
             headers={"Content-Type": "application/x-www-form-urlencoded;charset=utf-8"}
         )
+        print("==== TOKEN RESPONSE ====")
+        print(resp.status_code)
+        print(resp.text)
+
+        resp.raise_for_status()
         resp.raise_for_status()
         token_data = resp.json()
         access_token = token_data["access_token"]

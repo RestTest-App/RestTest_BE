@@ -19,11 +19,18 @@ async def get_current_user(
         token: str = Depends(oauth2_scheme),
         db: AsyncSession = Depends(get_db)
 ):
+    payload = JWTService.verify_token(token)
+    user_id = payload.get("sub")
+    print(f"Decoded token user_id (sub): {user_id}")
     jwt_service = JWTService()
 
     # access token 디코딩 후 dict으로 token 정보 가져오기
     payload: Dict = jwt_service.verify_token(token)
+      
+    user = await AuthService.get_user_by_id(db, int(user_id))
 
+    if user is None:
+        raise UnauthorizedException(detail="유효하지 않은 사용자입니다.")  # ★ 이 부분 추가
     # payload에서 id에 해당하는 값 가져오기
     user_id = payload.get("sub")
     if user_id is None:

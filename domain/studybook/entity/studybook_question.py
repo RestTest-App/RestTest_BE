@@ -13,5 +13,4 @@ class StudyBookQuestion(Base):
     description_image = Column(String(255), nullable=True, comment="문제 참고 이미지")
     options = Column(JSON, nullable=False, comment="문제 보기")
     answer = Column(Integer, nullable=False, comment="정답")
-    explanation = Column(Text, nullable=True, comment="문제 해설")
     option_explanations = Column(JSON, nullable=True, comment="보기 별 해설")
