@@ -96,7 +96,6 @@ async def upload_my_studybook_by_pdf_usecase(file: UploadFile, current_user: Use
                 description_image=None,
                 options=item["options"],
                 answer=item["answer"],
-                explanation=None,
                 option_explanations=None,
             )
             db.add(question)

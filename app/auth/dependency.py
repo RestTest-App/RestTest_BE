@@ -37,7 +37,7 @@ async def get_current_user(
         raise UnauthorizedException(message="사용자 정보가 없습니다.")
 
     # 사용자 데이터 가져오기
-    user = await AuthService.get_user(db, int(user_id))
+    user = await AuthService.get_user_by_id(db, int(user_id))
     if not user:
         raise NotFoundException(message="사용자를 찾을 수 없습니다.")
 
