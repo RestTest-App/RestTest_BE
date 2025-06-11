@@ -16,7 +16,7 @@ from domain.auth.service.auth_service import AuthService
 from domain.auth.service.kakao_auth_service import KakaoAuthService
 from exception.success import created, ok, no_content
 
-router = APIRouter(prefix="/auth", tags=["auth"])
+router = APIRouter()
 
 jwt_service = JWTService()
 
