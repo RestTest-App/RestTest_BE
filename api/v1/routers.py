@@ -8,7 +8,7 @@ from api.v1.test import test_router
 from api.v1.studybook import studybook_router
 from api.v1.studybook.studybook_question_router import router as studybook_question_router
 
-router = APIRouter()
+router = APIRouter(prefix="/api/v1")
 
 router.include_router(review_router.router, tags=["review"], prefix="/review")
 router.include_router(auth_router.router, tags=["auth"])

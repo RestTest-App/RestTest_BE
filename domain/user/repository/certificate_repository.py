@@ -24,7 +24,7 @@ class CertificateRepository:
     # user.certificates에 Certificate 리스트 할당
     @staticmethod
     async def add_user_certificate(db: AsyncSession, user: User, certificates: Sequence[int]) -> User:
-        certificates = CertificateRepository.get_certificates(db, certificates)
+        certificates = await CertificateRepository.get_certificates(db, certificates)
         user.certificate = certificates
         db.add(user)
         await db.commit()

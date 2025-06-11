@@ -22,5 +22,6 @@ engine = create_async_engine(
     connect_args={
         "charset": "utf8mb4",
     }
+, isolation_level="READ COMMITTED"
 )
-AsyncSessionLocal = async_sessionmaker(autoflush=False, bind=engine)
+AsyncSessionLocal = async_sessionmaker(autoflush=False, bind=engine, expire_on_commit=False)
