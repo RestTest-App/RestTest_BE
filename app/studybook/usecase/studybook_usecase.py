@@ -14,6 +14,8 @@ from datetime import datetime
 import uuid
 import traceback
 import logging
+import json
+from app.utils.gpt_ocr_processor import gpt_ocr_process
 
 from exception.client_exception import (
     NotFoundException, BadRequestException, ConflictException,
@@ -25,33 +27,33 @@ from exception.success import created, ok
 
 logger = logging.getLogger(__name__)
 
-def dummy_ocr_from_image(file: UploadFile):
-    return [
-        {
-            "description": "이미지 문제 1?",
-            "options": ["A", "B", "C", "D"],
-            "answer": 1
-        },
-        {
-            "description": "이미지 문제 2?",
-            "options": ["가", "나", "다", "라"],
-            "answer": 3
-        }
-    ]
-
-def dummy_ocr_process(file: UploadFile):
-    return [
-        {
-            "description": "1 + 1 = ?",
-            "options": ["1", "2", "3", "4"],
-            "answer": 2,
-        },
-        {
-            "description": "2 + 2 = ?",
-            "options": ["2", "3", "4", "5"],
-            "answer": 3,
-        }
-    ]
+# def dummy_ocr_from_image(file: UploadFile):
+#     return [
+#         {
+#             "description": "이미지 문제 1?",
+#             "options": ["A", "B", "C", "D"],
+#             "answer": 1
+#         },
+#         {
+#             "description": "이미지 문제 2?",
+#             "options": ["가", "나", "다", "라"],
+#             "answer": 3
+#         }
+#     ]
+#
+# def dummy_ocr_process(file: UploadFile):
+#     return [
+#         {
+#             "description": "1 + 1 = ?",
+#             "options": ["1", "2", "3", "4"],
+#             "answer": 2,
+#         },
+#         {
+#             "description": "2 + 2 = ?",
+#             "options": ["2", "3", "4", "5"],
+#             "answer": 3,
+#         }
+#     ]
 
 async def upload_my_studybook_by_pdf_usecase(file: UploadFile, current_user: User, db: AsyncSession):
     try:
@@ -73,8 +75,7 @@ async def upload_my_studybook_by_pdf_usecase(file: UploadFile, current_user: Use
         if hasattr(file, 'size') and file.size and file.size > 100 * 1024 * 1024:
             raise RequestEntityTooLargeException("최대 업로드 용량을 초과했습니다.")
 
-        ocr_result = dummy_ocr_process(file)
-
+        ocr_result = gpt_ocr_process(file)
         if not ocr_result:
             raise UnprocessableEntityException("PDF를 분석할 수 없습니다.")
 
@@ -136,7 +137,7 @@ async def upload_my_studybook_by_img_usecase(file: UploadFile, current_user: Use
         if existing_studybook:
             raise ConflictException("이미 있는 파일명입니다.")
 
-        ocr_result = dummy_ocr_from_image(file)
+        ocr_result = gpt_ocr_process(file)
 
         if not ocr_result:
             raise UnprocessableEntityException("이미지를 분석할 수 없습니다.")
@@ -206,9 +207,10 @@ async def get_my_studybooks_usecase(current_user: User, db: AsyncSession):
         logger.info(f"[SUCCESS] get_my_studybooks_usecase - user_id: {current_user.id}, studybook_count: {len(response_items)}")
 
         return ok(
-            data=MyStudybookResponseDTO(studybooks=response_items).dict(),
+            data=json.loads(MyStudybookResponseDTO(studybooks=response_items).json()),
             message="나의 문제집 불러오기 성공"
         )
+
     except Exception:
         logger.error("[SERVER ERROR] get_my_studybooks_usecase")
         logger.error(traceback.format_exc())
@@ -248,3 +250,56 @@ async def delete_my_studybook_usecase(studybook_id: int, current_user: User, db:
         logger.error("[SERVER ERROR] delete_my_studybook_usecase")
         logger.error(traceback.format_exc())
         raise InternalServerErrorException("문제집 삭제 중 서버 오류가 발생했습니다.")
+
+async def upload_my_studybook_by_dummy_usecase(
+    studybook_name: str,
+    questions: list[dict],
+    current_user: User,
+    db: AsyncSession
+):
+    # 중복 체크
+    result = await db.execute(
+        select(StudyBook).where(
+            StudyBook.name == studybook_name,
+            StudyBook.user_id == current_user.id
+        )
+    )
+    existing_studybook = result.scalars().first()
+    if existing_studybook:
+        raise ConflictException("이미 있는 파일명입니다.")
+
+    # StudyBook insert
+    new_book = StudyBook(
+        name=studybook_name,
+        created_at=datetime.now(),
+        question_count=len(questions),
+        file_color="#%06x" % (uuid.uuid4().int & 0xFFFFFF),
+        user_id=current_user.id,
+    )
+    db.add(new_book)
+    await db.flush()
+
+    # StudyBookQuestion insert
+    for item in questions:
+        question = StudyBookQuestion(
+            study_book_id=new_book.id,
+            description=item["description"],
+            description_detail=None,
+            description_image=None,
+            options=item["options"],
+            answer=item["answer"],
+            option_explanations=None,
+        )
+        db.add(question)
+
+    await db.commit()
+
+    logger.info(f"[SUCCESS] upload_my_studybook_by_dummy_usecase - user_id: {current_user.id}, studybook_id: {new_book.id}")
+
+    return created(
+        data=UploadStudybookResponseDTO(
+            studybook_id=new_book.id,
+            message="문제집이 성공적으로 생성되었습니다. (dummy)"
+        ).dict(),
+        message="문제집 생성 성공 (dummy)"
+    )

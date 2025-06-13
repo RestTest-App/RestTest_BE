@@ -3,6 +3,8 @@
 from fastapi import APIRouter, UploadFile, File, Path, Depends
 from typing import Annotated
 from datetime import datetime
+
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Session
 
 from app.studybook.dto.response.upload_studybook_response_dto import UploadStudybookResponseDTO
@@ -14,6 +16,9 @@ from domain.user.entity.user import User
 from database.dependency import get_db
 from app.studybook.usecase.studybook_usecase import upload_my_studybook_by_pdf_usecase, get_my_studybooks_usecase
 from app.studybook.usecase.studybook_usecase import delete_my_studybook_usecase
+from app.utils.dummy_questions import dummy_questions
+from app.studybook.usecase.studybook_usecase import upload_my_studybook_by_dummy_usecase
+
 from app.auth.dependency import get_current_user
 router = APIRouter()
 #
@@ -36,6 +41,16 @@ router = APIRouter()
 #         monthly_study_date=[],  # 수정될 수 있음
 #         is_study_today=False,
 #     )
+
+@router.post("/upload-my-studybook-by-dummy")
+async def upload_my_studybook_by_dummy(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    # 테스트용 문제집 이름 (원하면 param으로도 받을 수 있음)
+    studybook_name = "테스트 더미 문제집"
+    return await upload_my_studybook_by_dummy_usecase(studybook_name, dummy_questions, current_user, db)
+
 
 @router.post("/upload-my-studybook-by-pdf", response_model=UploadStudybookResponseDTO)
 async def upload_my_studybook_by_pdf(
