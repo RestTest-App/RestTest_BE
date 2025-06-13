@@ -1,5 +1,5 @@
-from pydantic import BaseModel, ConfigDict
-
+from pydantic import BaseModel, ConfigDict, Field
+from typing import Optional
 
 class UserCreateDTO(BaseModel):
     model_config = ConfigDict(from_attributes=True)

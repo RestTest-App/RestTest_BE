@@ -12,7 +12,6 @@ class KakaoAuthService:
         self.token_url = kakao_settings.KAKAO_TOKEN_URL
         self.profile_url = kakao_settings.KAKAO_PROFILE_URL
 
-
     async def fetch_kakao_user_info(self, kakao_token: str) -> dict:
         print("kakao_token : ", kakao_token)
 

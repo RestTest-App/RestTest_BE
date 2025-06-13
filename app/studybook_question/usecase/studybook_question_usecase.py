@@ -1,4 +1,3 @@
-from datetime import datetime
 from sqlalchemy.orm import Session
 from domain.studybook.entity.studybook import StudyBook
 from domain.studybook.entity.studybook_question import StudyBookQuestion
@@ -7,8 +6,6 @@ from exception.client_exception import (
     NotFoundException, ForbiddenException, BadRequestException
 )
 from exception.success import created, ok
-from exception.client_exception import NotFoundException, ForbiddenException
-from exception.success import ok
 
 async def register_studybook_question_usecase(
     study_book_id: int,
