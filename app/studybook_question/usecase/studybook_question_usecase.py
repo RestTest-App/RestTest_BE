@@ -6,6 +6,8 @@ from exception.client_exception import (
     NotFoundException, ForbiddenException, BadRequestException
 )
 from exception.success import created, ok
+from sqlalchemy.future import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 async def register_studybook_question_usecase(
     study_book_id: int,
@@ -43,10 +45,11 @@ async def register_studybook_question_usecase(
     return created(data={"question_id": new_question.id}, message="문제 등록 성공")
 
 
+
 async def get_studybook_questions_usecase(
     studybook_id: int,
     current_user: User,
-    db: Session
+    db: AsyncSession  # 반드시 AsyncSession으로 타입 수정
 ):
     """
     문제집 내 문제 전체 조회
@@ -55,18 +58,20 @@ async def get_studybook_questions_usecase(
     - 404: 문제집이 존재하지 않음
     - 403: 타인의 문제집에 접근
     """
-    studybook = db.query(StudyBook).filter(StudyBook.id == studybook_id).first()
+    result = await db.execute(
+        select(StudyBook).where(StudyBook.id == studybook_id)
+    )
+    studybook = result.scalars().first()
 
     if not studybook:
         raise NotFoundException("존재하지 않는 문제집입니다.")
     if studybook.user_id != current_user.id:
         raise ForbiddenException("접근 권한이 없습니다.")
 
-    questions = (
-        db.query(StudyBookQuestion)
-        .filter(StudyBookQuestion.study_book_id == studybook_id)
-        .all()
+    questions_result = await db.execute(
+        select(StudyBookQuestion).where(StudyBookQuestion.study_book_id == studybook_id)
     )
+    questions = questions_result.scalars().all()
 
     result = [
         {
@@ -74,7 +79,7 @@ async def get_studybook_questions_usecase(
             "description": q.description,
             "options": q.options,
             "answer": q.answer,
-            "created_at": q.created_at
+            # "created_at": q.created_at
         }
         for q in questions
     ]
