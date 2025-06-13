@@ -12,26 +12,14 @@ class KakaoAuthService:
         self.token_url = kakao_settings.KAKAO_TOKEN_URL
         self.profile_url = kakao_settings.KAKAO_PROFILE_URL
 
-    async def fetch_kakao_user_info(self, code: str) -> dict:
-        resp = requests.post(
-            self.token_url,
-            data={
-                "grant_type": "authorization_code",
-                "client_id": self.client_id,
-                "client_secret": self.client_secret,
-                "redirect_uri": self.redirect_uri,
-                "code": code,
-            },
-            headers={"Content-Type": "application/x-www-form-urlencoded;charset=utf-8"}
-        )
-        resp.raise_for_status()
-        token_data = resp.json()
-        access_token = token_data["access_token"]
+
+    async def fetch_kakao_user_info(self, kakao_token: str) -> dict:
+        print("kakao_token : ", kakao_token)
 
         # 카카오 프로필 조회
         profile_resp = requests.get(
             self.profile_url,
-            headers={"Authorization": f"Bearer {access_token}"}
+            headers={"Authorization": f"Bearer {kakao_token}"}
         )
         profile_resp.raise_for_status()
         profile = profile_resp.json()
@@ -43,5 +31,5 @@ class KakaoAuthService:
 
         return {"email": email, "auth_provider": "KAKAO"}
 
-    async def fetch_user_into_test(self, code: str) -> dict:
-        return {"email": f"{code}@kakao.com", "auth_provider": "KAKAO"}
+    async def fetch_user_into_test(self, kakao_token: str) -> dict:
+        return {"email": f"{kakao_token}@kakao.com", "auth_provider": "KAKAO"}
