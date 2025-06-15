@@ -24,9 +24,8 @@ async def get_current_user(
     print(f"Decoded token user_id (sub): {user_id}")
     jwt_service = JWTService()
 
-    # access token 디코딩 후 dict으로 token 정보 가져오기
     payload: Dict = jwt_service.verify_token(token)
-      
+
     user = await AuthService.get_user_by_id(db, int(user_id))
 
     if user is None:
