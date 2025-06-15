@@ -11,3 +11,4 @@ class ReviewNoteByRest(Base):
     name = Column(String(100), nullable=False, comment="복습노트 이름")
     user_id = Column(BigInteger, ForeignKey("user.id"), nullable=False, comment="사용자 ID")
     certificate_id = Column(BigInteger, ForeignKey("certificate.id"), nullable=False, comment="자격증 ID")
+

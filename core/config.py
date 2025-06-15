@@ -12,6 +12,7 @@ class JwtSetting(BaseSettings):
         env_file_encoding = "utf-8"
         extra = "ignore"
 
+
 class KakaoSettings(BaseSettings):
     KAKAO_CLIENT_ID: str = ""
     KAKAO_CLIENT_SECRET_KEY: str = ""
@@ -33,6 +34,19 @@ class GPTSetting(BaseSettings):
         env_file_encoding = "utf-8"
         extra = "ignore"
 
+class AWSSettings(BaseSettings):
+    AWS_ACCESS_KEY_ID: str = ""
+    AWS_SECRET_ACCESS_KEY: str = ""
+    AWS_REGION_NAME: str = ""
+    AWS_STORAGE_BUCKET_NAME: str = ""
+
+    class Config:
+        env_file = ".env.dev"
+        env_file_encoding = "utf-8"
+        extra = "ignore"
+
+
 settings = JwtSetting()
 kakao_settings = KakaoSettings()
 gpt_settings = GPTSetting()
+aws_settings = AWSSettings()
