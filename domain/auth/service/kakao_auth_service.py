@@ -20,6 +20,9 @@ class KakaoAuthService:
             self.profile_url,
             headers={"Authorization": f"Bearer {kakao_token}"}
         )
+
+        print(profile_resp.json())
+
         profile_resp.raise_for_status()
         profile = profile_resp.json()
 
