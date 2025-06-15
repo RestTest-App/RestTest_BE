@@ -51,3 +51,51 @@ async def generate_option_explanations(question: dict) -> list[str]:
     except Exception as e:
         logger.warning(f"[GPT WARNING] GPT API 호출 실패: {str(e)}")
         raise UnprocessableEntityException("AI 해설 생성 실패")
+
+async def generate_today_questions(certificate_name: str) -> list[dict]:
+    """
+    GPT에게 오늘의 시험 문제 10개 생성 요청
+    """
+    prompt = f"""
+당신은 자격증 시험 문제 출제 AI입니다.
+다음 자격증 이름을 기반으로 객관식 4지선다 문제 10개를 JSON 배열 형태로 생성해주세요.
+
+자격증 이름: {certificate_name}
+자격증에서 나올 수 있는 다양한 범위에서 문제를 뽑아 작성해주세요
+출력 포맷 예시:
+[
+  {{
+    "description": "문제 내용",
+    "description_detail": "문제 상세 설명 (선택사항, 없으면 null)",
+    "options": ["선택지1", "선택지2", "선택지3", "선택지4"],
+    "answer": 2,  // 인덱스 (0부터 시작)
+    "option_explanations": ["해설1", "해설2", "해설3", "해설4"]
+  }},
+  ...
+]
+반드시 유효한 JSON으로만 출력해 주세요.
+    """
+
+    try:
+        response = client.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {"role": "system", "content": "당신은 자격증 시험 문제를 정확히 JSON 형식으로 출력하는 AI입니다."},
+                {"role": "user", "content": prompt.strip()}
+            ],
+            temperature=0.7,
+            max_tokens=3000
+        )
+        content = response.choices[0].message.content.strip()
+
+        try:
+            result = json.loads(content)
+            if not isinstance(result, list) or len(result) != 10:
+                raise ValueError("문제 수 오류 또는 형식 오류")
+            return result
+        except Exception:
+            logger.warning(f"[GPT WARNING] today_test_question 파싱 실패: {content}")
+            raise UnprocessableEntityException("AI 문제 생성 실패 (JSON 파싱 에러)")
+    except Exception as e:
+        logger.warning(f"[GPT WARNING] GPT API 호출 실패: {str(e)}")
+        raise UnprocessableEntityException("AI 문제 생성 실패")

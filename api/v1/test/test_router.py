@@ -4,11 +4,8 @@ from database.dependency import get_db
 from sqlalchemy.ext.asyncio import AsyncSession
 
 # 오늘의 문제
-from app.test.dto.response.create_today_questions_response import CreateTodayQuestionsResponse
-from app.test.usecase.create_today_questions_usecase import create_today_questions_usecase
 # 문제 풀기 (시험 모드)
 from app.test.usecase.test_mode_usecase import get_test_mode_usecase
-from app.test.dto.response.test_mode_response import TestModeResponse
 # 시험 결과 제출 (시험 모드)
 from app.test.dto.request.submit_test_request import SubmitTestRequest
 from app.test.dto.response.submit_test_response import SubmitTestResponse
@@ -18,13 +15,6 @@ from core.auth import get_current_user
 # 문제 풀기 (쉬엄 모드)
 from app.test.usecase.rest_mode_usecase import rest_mode_usecase
 from app.test.dto.response.rest_mode_response import RestModeResponse
-# 문제 풀기 (오늘의 문제)
-from app.test.dto.response.today_questions_response import TodayQuestionsResponse
-from app.test.usecase.today_questions_usecase import today_questions_usecase
-# AI 해설 생성하기
-from app.test.usecase.create_ai_explanation_usecase import create_ai_explanation_usecase
-from app.test.dto.response.create_ai_explanation_response import CreateAIExplanationResponse
-# 개발자에게 피드백 제출하기
 
 # 문제, 시험 등록하기
 from app.test.dto.request.create_exam_request import CreateExamRequest
@@ -62,20 +52,28 @@ from app.test.usecase.exam_usecase import get_exam_info_usecase
 #시험모드에서 문제 내용 받기
 from app.test.usecase.test_usecase import get_test_mode_usecase
 
-#ai 해설 추가하기
+#ai 해설 추가하기 & 오늘의 문제 만들기
 from app.test.usecase.create_ai_explanation_usecase import create_ai_explanation_usecase
+from app.test.usecase.create_today_test_usecase import create_today_questions_usecase
 
-
+#이메일 보내기
+from app.test.usecase.send_feedback_usecase import send_feedback_usecase
+from app.test.dto.request.feedback_request_dto import FeedbackRequestDTO
 
 router = APIRouter()
 
 # 오늘의 문제
-@router.post("/create-today-questions/{certificate_id}", response_model=CreateTodayQuestionsResponse)
+@router.post("/create-today-questions/{certificate_id}", summary="오늘의 문제 생성 또는 불러오기")
 async def create_today_questions(
-    certificate_id: str = Path(...),
-    db: Session = Depends(get_db)
+    certificate_id: int = Path(..., description="자격증 ID"),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
 ):
-    return await create_today_questions_usecase(certificate_id, db)
+    return await create_today_questions_usecase(
+        certificate_id=certificate_id,
+        current_user=current_user,
+        db=db
+    )
 
 # 시험 결과 제출 (시험 모드)
 @router.post("/submit/{test_id}", response_model=SubmitTestResponse)
@@ -95,18 +93,6 @@ async def get_relax_mode_questions(
     db: Session = Depends(get_db)
 ):
     return await rest_mode_usecase(question_count, db)
-
-
-# 문제 풀기 (오늘의 문제)
-@router.get("/today-questions", response_model=TodayQuestionsResponse)
-async def today_questions(
-    certificate_id: str = Query(...),
-    datetime: str = Query(...),
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
-):
-    return await today_questions_usecase(certificate_id, datetime, db, current_user)
-
 
 # 시험 등록 API
 @router.post("/exam", response_model=CreateExamResponse, summary="시험 등록 API")
@@ -217,3 +203,7 @@ async def create_ai_explanation(
     db: AsyncSession = Depends(get_db),
 ):
     return await create_ai_explanation_usecase(exam_id, db)
+
+@router.post("/send-answer-feedback")
+async def send_feedback(dto: FeedbackRequestDTO):
+    return await send_feedback_usecase(dto)

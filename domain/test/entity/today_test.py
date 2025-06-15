@@ -1,4 +1,5 @@
 from sqlalchemy import Column, BigInteger, DateTime, Boolean, ForeignKey
+from sqlalchemy.orm import relationship
 from database.base import Base
 
 
@@ -9,3 +10,4 @@ class TodayTest(Base):
     created_at = Column(DateTime, nullable=False, comment="생성일시")
     is_solved = Column(Boolean, nullable=False, comment="응시 완료 여부")
     certificate_id = Column(BigInteger, ForeignKey("certificate.id"), nullable=False, comment="자격증 ID")
+    user_today_tests = relationship("UserTodayTest", back_populates="today_test", cascade="all, delete-orphan")
