@@ -27,10 +27,12 @@ def get_token_store() -> TokenStore:
 @router.post("/sign-up", response_model=SignUpResponse)
 async def sign_up(request: SignUpRequest, db: AsyncSession = Depends(get_db)):
     # 카카오에서 정보 받아오기 (email, auth_provider)
-    info = await KakaoAuthService().fetch_kakao_user_info(code=request.code)
+    info = await KakaoAuthService().fetch_kakao_user_info(kakao_token=request.kakao_token)
+
+    print(info.values())
 
     # 카카오 인가 코드 추가
-    data = request.model_dump(exclude={"code"})
+    data = request.model_dump(exclude={"kakao_token"})
     data.update(info)
 
     dto = UserCreateDTO(**data)
@@ -41,6 +43,8 @@ async def sign_up(request: SignUpRequest, db: AsyncSession = Depends(get_db)):
     payload = {"sub" : str(user.id)}
     access_token = jwt_service.create_access_token(payload)
     refresh_token = jwt_service.create_refresh_token(payload)
+
+    print(access_token)
 
     token_data = {
         "access_token" : access_token,
@@ -53,8 +57,11 @@ async def sign_up(request: SignUpRequest, db: AsyncSession = Depends(get_db)):
 @router.post("/sign-in", response_model=SignInResponse)
 async def sign_in(request: SignInRequest, db: AsyncSession = Depends(get_db)):
 
+    info = await KakaoAuthService().fetch_kakao_user_info(kakao_token=request.kakao_token)
+    email = info["email"]
+
     usecase = SignInUseCase(db)
-    user = await usecase.execute(request.code)
+    user = await usecase.execute(email, auth_provider="KAKAO")
 
     payload = {"sub": str(user.id)}
     access_token = jwt_service.create_access_token(payload)
