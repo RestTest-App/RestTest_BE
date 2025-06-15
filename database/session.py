@@ -3,7 +3,10 @@ from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 from dotenv import load_dotenv
 import os
 
-load_dotenv(".env.dev")
+MODE = os.getenv("MODE", "dev")
+if MODE == "dev":
+    load_dotenv(".env.dev")
+
 user = os.getenv("DB_USER", "")
 password = quote_plus(os.getenv("DB_PASSWORD", ""))
 host = os.getenv("DB_HOST", "")

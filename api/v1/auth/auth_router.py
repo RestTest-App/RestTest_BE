@@ -29,6 +29,8 @@ async def sign_up(request: SignUpRequest, db: AsyncSession = Depends(get_db)):
     # 카카오에서 정보 받아오기 (email, auth_provider)
     info = await KakaoAuthService().fetch_kakao_user_info(kakao_token=request.kakao_token)
 
+    print(info.values())
+
     # 카카오 인가 코드 추가
     data = request.model_dump(exclude={"kakao_token"})
     data.update(info)
@@ -41,6 +43,8 @@ async def sign_up(request: SignUpRequest, db: AsyncSession = Depends(get_db)):
     payload = {"sub" : str(user.id)}
     access_token = jwt_service.create_access_token(payload)
     refresh_token = jwt_service.create_refresh_token(payload)
+
+    print(access_token)
 
     token_data = {
         "access_token" : access_token,
