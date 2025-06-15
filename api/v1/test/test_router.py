@@ -1,15 +1,13 @@
-
 from fastapi import APIRouter, Depends, Path, Query
 from sqlalchemy.orm import Session
 from database.dependency import get_db
-from app.test.dto.request.test_request import TestRequest
-from app.test.dto.response.test_response import TestResponse
-from app.test.usecase.test_usecase import create_test_usecae, get_tests_usecase
+from sqlalchemy.ext.asyncio import AsyncSession
+
 # 오늘의 문제
 from app.test.dto.response.create_today_questions_response import CreateTodayQuestionsResponse
 from app.test.usecase.create_today_questions_usecase import create_today_questions_usecase
 # 문제 풀기 (시험 모드)
-from app.test.usecase.test_mode_usecase import test_mode_usecase
+from app.test.usecase.test_mode_usecase import get_test_mode_usecase
 from app.test.dto.response.test_mode_response import TestModeResponse
 # 시험 결과 제출 (시험 모드)
 from app.test.dto.request.submit_test_request import SubmitTestRequest
@@ -21,28 +19,55 @@ from core.auth import get_current_user
 from app.test.usecase.rest_mode_usecase import rest_mode_usecase
 from app.test.dto.response.rest_mode_response import RestModeResponse
 # 문제 풀기 (오늘의 문제)
-from domain.user.entity.user import User
 from app.test.dto.response.today_questions_response import TodayQuestionsResponse
 from app.test.usecase.today_questions_usecase import today_questions_usecase
 # AI 해설 생성하기
 from app.test.usecase.create_ai_explanation_usecase import create_ai_explanation_usecase
 from app.test.dto.response.create_ai_explanation_response import CreateAIExplanationResponse
 # 개발자에게 피드백 제출하기
-from app.test.dto.request.send_answer_feedback_request import SendAnswerFeedbackRequest
-from app.test.dto.response.send_answer_feedback_response import SendAnswerFeedbackResponse
 
-router = APIRouter(prefix="/test", tags=["test"])
+# 문제, 시험 등록하기
+from app.test.dto.request.create_exam_request import CreateExamRequest
+from app.test.dto.response.create_exam_response import CreateExamResponse
+from app.test.dto.request.create_question_request import CreateQuestionRequest
+from app.test.dto.response.create_question_response import CreateQuestionResponse
+from app.test.usecase.question_usecase import create_question_usecase
+
+# 자격증 등록하기
+from app.test.dto.request.create_certificate_request import CreateCertificateRequest
+from app.test.dto.response.create_certificate_response import CreateCertificateResponse
+from app.test.usecase.certificate_usecase import create_certificate_usecase
+from app.test.dto.request.create_exam_section_request import CreateExamSectionRequest
+from app.test.dto.response.create_exam_section_response import CreateExamSectionResponse
+from app.test.usecase.exam_section_usecase import create_exam_section_usecase
+from typing import List
+from app.test.usecase.exam_section_usecase import create_exam_sections_usecase
+from app.test.dto.response.get_exam_section_response import GetExamSectionResponse
+from app.test.usecase.exam_section_usecase import get_exam_sections_by_exam_id_usecase
+from app.test.dto.response.get_question_response import GetQuestionResponse
+from app.test.usecase.question_usecase import get_questions_by_exam_id_usecase
+
+#더미 데이터 생성
+from app.test.usecase.dummy_data_usecase import create_dummy_data_usecase
+from app.test.usecase.dummy_data_usecase import reset_dummy_data_usecase
+from app.test.dto.request.create_dummy_data_request import CreateDummyDataRequest
 
 
-@router.post("/", response_model=TestResponse)
-def create_test(request: TestRequest, db: Session = Depends(get_db)):
-    return create_test_usecae(db, request)
+#시험모드 문제 리스트 출력
+from app.test.dto.response.get_certificates_exam_list_response import GetCertificatesExamListResponse
+from app.test.usecase.exam_usecase import get_certificates_exam_list_usecase
+from app.test.usecase.exam_usecase import create_exam_usecase
+from app.test.usecase.exam_usecase import get_exam_info_usecase
+
+#시험모드에서 문제 내용 받기
+from app.test.usecase.test_usecase import get_test_mode_usecase
+
+#ai 해설 추가하기
+from app.test.usecase.create_ai_explanation_usecase import create_ai_explanation_usecase
 
 
-@router.get("/", response_model=list[TestResponse])
-def get_tests(db: Session = Depends(get_db)):
-    return get_tests_usecase(db)
 
+router = APIRouter()
 
 # 오늘의 문제
 @router.post("/create-today-questions/{certificate_id}", response_model=CreateTodayQuestionsResponse)
@@ -51,16 +76,6 @@ async def create_today_questions(
     db: Session = Depends(get_db)
 ):
     return await create_today_questions_usecase(certificate_id, db)
-
-
-# 문제 풀기 (시험 모드)
-@router.get("/test-mode/{exam_id}", response_model=TestModeResponse)
-async def test_mode(
-    exam_id: str,
-    db: Session = Depends(get_db)
-):
-    return await test_mode_usecase(exam_id, db)
-
 
 # 시험 결과 제출 (시험 모드)
 @router.post("/submit/{test_id}", response_model=SubmitTestResponse)
@@ -93,11 +108,112 @@ async def today_questions(
     return await today_questions_usecase(certificate_id, datetime, db, current_user)
 
 
-# AI 해설 생성하기
-@router.post("/create-ai-explanations/{exam_id}", response_model=CreateAIExplanationResponse)
-async def create_ai_explanation(
-    exam_id: str = Path(...),
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+# 시험 등록 API
+@router.post("/exam", response_model=CreateExamResponse, summary="시험 등록 API")
+async def create_exam(
+    request: CreateExamRequest,
+    db: AsyncSession = Depends(get_db)
 ):
-    return await create_ai_explanation_usecase(exam_id, db, current_user)
+    return await create_exam_usecase(request, db)
+
+
+@router.get("/exam/{exam_id}/info", summary="시험 정보 조회 API")
+async def get_exam_info(
+    exam_id: int,
+    db: AsyncSession = Depends(get_db)
+):
+    result = await get_exam_info_usecase(exam_id, db)
+    return {
+        "code": 200,
+        "message": "시험 정보 조회 성공",
+        "data": result
+    }
+# 문제 등록 API
+@router.post("/exam/{exam_id}/question", response_model=CreateQuestionResponse, summary="문제 등록 API")
+async def create_question(
+    exam_id: int = Path(..., description="시험 ID"),
+    request: CreateQuestionRequest = ...,
+    db: AsyncSession = Depends(get_db)
+):
+    return await create_question_usecase(exam_id, request, db)
+
+@router.post("/certificate", response_model=CreateCertificateResponse, summary="자격증 등록 API")
+async def create_certificate(
+    request: CreateCertificateRequest,
+    db: AsyncSession = Depends(get_db)
+):
+    return await create_certificate_usecase(request, db)
+
+@router.post("/exam-section", response_model=CreateExamSectionResponse, summary="과목 등록 API")
+async def create_exam_section(
+    request: CreateExamSectionRequest,
+    db: AsyncSession = Depends(get_db)
+):
+    return await create_exam_section_usecase(request, db)
+
+
+@router.post("/exam-sections", response_model=List[CreateExamSectionResponse], summary="과목 배치 등록 API")
+async def create_exam_sections(
+    request: List[CreateExamSectionRequest],
+    db: AsyncSession = Depends(get_db)
+):
+    return await create_exam_sections_usecase(request, db)
+
+@router.get("/exam/{exam_id}/exam-sections", response_model=list[GetExamSectionResponse], summary="과목 목록 조회 API")
+async def get_exam_sections_by_exam_id(
+    exam_id: int,
+    db: AsyncSession = Depends(get_db)
+):
+    return await get_exam_sections_by_exam_id_usecase(exam_id, db)
+
+@router.get("/exam/{exam_id}/questions", response_model=list[GetQuestionResponse], summary="문제 목록 조회 API")
+async def get_questions_by_exam_id(
+    exam_id: int,
+    db: AsyncSession = Depends(get_db)
+):
+    return await get_questions_by_exam_id_usecase(exam_id, db)
+
+@router.post("/dummy-data", summary="유형별 Dummy Data 생성 API")
+async def create_dummy_data(
+    request: CreateDummyDataRequest,   # ← 여기에 request 추가 필요!
+    db: AsyncSession = Depends(get_db)
+):
+    result = await create_dummy_data_usecase(request, db)   # ← 여기에도 request 넣어서 호출
+    return {
+        "code": 200,
+        "message": "Dummy data 생성 성공",
+        "data": result
+    }
+
+@router.delete("/reset-dummy-data", summary="Dummy 데이터 초기화 API")
+async def reset_dummy_data(
+    db: AsyncSession = Depends(get_db)
+):
+    result = await reset_dummy_data_usecase(db)
+    return {
+        "code": 200,
+        "message": result["message"]
+    }
+
+@router.get("/certificates/exams", response_model=GetCertificatesExamListResponse, summary="전체 자격증별 시험 목록 조회 API")
+async def get_certificates_exam_list(
+    offset: int = 0,
+    limit: int = 10,
+    db: AsyncSession = Depends(get_db)
+):
+    return await get_certificates_exam_list_usecase(offset, limit, db)
+
+@router.get("/test-mode/{exam_id}")
+async def get_test_mode(
+    exam_id: int,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    return await get_test_mode_usecase(exam_id, current_user, db)
+
+@router.post("/create-ai-explanations/{exam_id}")
+async def create_ai_explanation(
+    exam_id: int = Path(...),
+    db: AsyncSession = Depends(get_db),
+):
+    return await create_ai_explanation_usecase(exam_id, db)
