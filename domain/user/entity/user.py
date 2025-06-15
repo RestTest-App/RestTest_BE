@@ -1,8 +1,8 @@
 from sqlalchemy import Column, BigInteger, String, Boolean, DateTime, Integer, JSON
 from sqlalchemy.dialects.mysql import SET
+from sqlalchemy.orm import relationship
 from database.base import Base
 from sqlalchemy.dialects.mysql import JSON
-
 
 class User(Base):
     __tablename__ = "user"
@@ -29,3 +29,4 @@ class User(Base):
         comment="학습한 날짜"
     )
     is_study_today = Column(Boolean, nullable=False, default=False, comment="오늘 학습 여부")
+    user_today_tests = relationship("UserTodayTest", back_populates="user", cascade="all, delete-orphan")

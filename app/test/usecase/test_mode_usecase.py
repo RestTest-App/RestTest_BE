@@ -1,45 +1,39 @@
-from sqlalchemy.orm import Session
-from app.test.dto.response.test_mode_response import TestModeQuestionDTO
-from exception.client_exception import BadRequestException, NotFoundException
-from exception.server_exception import InternalServerErrorException
+from domain.user.entity.user import User
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
+
+from domain.test.entity.exam import Exam
+from domain.test.entity.question import Question
+from exception.client_exception import NotFoundException
 from exception.success import ok
 
 
-async def test_mode_usecase(exam_id: str, db: Session):
-    try:
-        if not exam_id:
-            raise BadRequestException("잘못된 요청입니다.")
+async def get_test_mode_usecase(exam_id: int, current_user: User, db: AsyncSession):
+    result = await db.execute(select(Exam).where(Exam.id == exam_id))
+    exam = result.scalars().first()
 
-        if exam_id != "VALID_EXAM_ID":
-            raise NotFoundException("해당 시험을 찾을 수 없습니다.")
+    if not exam:
+        raise NotFoundException("해당 시험을 찾을 수 없습니다.")
 
-        mock_questions = [
-            TestModeQuestionDTO(
-                answer_rate=89.23,
-                section="1과목",
-                description="다음 중 수의 표현에 있어 진법에 대한 설명으로 옳지 않은 것은?",
-                description_detail=None,
-                description_image="https://...",
-                options=[
-                    "16진수는 0~9, A~F로 구성된다",
-                    "각 자리수는 4비트로 표현된다",
-                    "16진수는 이진수보다 효율적이다",
-                    "문제가 복붙되었다"
-                ]
-            ),
-        ]
+    result = await db.execute(
+        select(Question).where(Question.exam_id == exam_id)
+    )
+    questions = result.scalars().all()
 
-        return ok(
-            data={
-                "pass_rate": 55.00,
-                "questions": [q.dict() for q in mock_questions]
-            },
-            message="시험 조회 성공"
-        )
-
-    except BadRequestException:
-        raise
-    except NotFoundException:
-        raise
-    except Exception:
-        raise InternalServerErrorException("서버 오류")
+    return ok(
+        data={
+            "pass_rate": float(exam.pass_rate or 0.0),
+            "questions": [
+                {
+                    "answer_rate": float(q.answer_rate or 0.0),
+                    "section": q.section,
+                    "description": q.description,
+                    "description_detail": q.description_detail,
+                    "description_image": q.description_image,
+                    "options": q.options
+                }
+                for q in questions
+            ]
+        },
+        message="시험 조회 성공"
+    )
