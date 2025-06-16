@@ -81,16 +81,6 @@ async def submit_today_test(
 ):
     return await submit_today_test_usecase(current_user, db)
 
-# 시험 결과 제출 (시험 모드)
-@router.post("/submit/{test_id}", response_model=SubmitTestResponse)
-async def submit_test(
-    test_id: str = Path(...),
-    request: SubmitTestRequest = Depends(),
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
-):
-    return await submit_test_usecase(test_id, request, db, current_user)
-
 # 문제 풀기 (쉬엄 모드)
 @router.get("/rest-mode/{question_count}", response_model=RestModeResponse)
 async def get_relax_mode_questions(
