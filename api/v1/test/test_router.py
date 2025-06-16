@@ -5,6 +5,8 @@ from app.test.dto.request.submit_test_request import SubmitTestRequestDTO
 from app.test.dto.response.submit_test_response import SubmitTestResponseDTO
 from database.dependency import get_db
 from sqlalchemy.ext.asyncio import AsyncSession
+# 오늘의 문제
+# 문제 풀기 (시험 모드)
 from app.test.usecase.test_mode_usecase import get_test_mode_usecase
 from app.test.usecase.submit_test_usecase import SubmitTestUsecase
 from app.auth.dependency import get_current_user
@@ -44,7 +46,8 @@ from app.test.usecase.exam_usecase import get_exam_info_usecase
 from app.test.usecase.test_usecase import get_test_mode_usecase
 #ai 해설 추가하기 & 오늘의 문제 만들기
 from app.test.usecase.create_ai_explanation_usecase import create_ai_explanation_usecase
-from app.test.usecase.create_today_test_usecase import create_today_questions_usecase
+from app.test.usecase.create_today_test_usecase import create_today_questions_usecase, get_today_questions_usecase, submit_today_test_usecase
+
 #이메일 보내기
 from app.test.usecase.send_feedback_usecase import send_feedback_usecase
 from app.test.dto.request.feedback_request_dto import FeedbackRequestDTO
@@ -64,6 +67,30 @@ async def create_today_questions(
         db=db
     )
 
+@router.get("/today-questions")
+async def get_today_questions(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    return await get_today_questions_usecase(current_user, db)
+
+@router.post("/submit-today-test")
+async def submit_today_test(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    return await submit_today_test_usecase(current_user, db)
+
+# 시험 결과 제출 (시험 모드)
+@router.post("/submit/{test_id}", response_model=SubmitTestResponse)
+async def submit_test(
+    test_id: str = Path(...),
+    request: SubmitTestRequest = Depends(),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    return await submit_test_usecase(test_id, request, db, current_user)
+
 # 문제 풀기 (쉬엄 모드)
 @router.get("/rest-mode/{question_count}", response_model=RestModeResponse)
 async def get_relax_mode_questions(
@@ -79,7 +106,6 @@ async def create_exam(
     db: AsyncSession = Depends(get_db)
 ):
     return await create_exam_usecase(request, db)
-
 
 @router.get("/exam/{exam_id}/info", summary="시험 정보 조회 API")
 async def get_exam_info(
@@ -128,14 +154,16 @@ async def get_exam_sections_by_exam_id(
     exam_id: int,
     db: AsyncSession = Depends(get_db)
 ):
-    return await get_exam_sections_by_exam_id_usecase(exam_id, db)
+    result = await get_exam_sections_by_exam_id_usecase(exam_id, db)
+    return ok(data=[r.dict() for r in result], message="과목 목록 조회 성공")
 
 @router.get("/exam/{exam_id}/questions", response_model=list[GetQuestionResponse], summary="문제 목록 조회 API")
 async def get_questions_by_exam_id(
     exam_id: int,
     db: AsyncSession = Depends(get_db)
 ):
-    return await get_questions_by_exam_id_usecase(exam_id, db)
+    result = await get_questions_by_exam_id_usecase(exam_id, db)
+    return ok(data=[item.dict() for item in result], message="문제 목록 조회 성공")
 
 @router.post("/dummy-data", summary="유형별 Dummy Data 생성 API")
 async def create_dummy_data(
