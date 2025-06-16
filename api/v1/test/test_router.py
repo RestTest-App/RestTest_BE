@@ -1,6 +1,11 @@
 
 from fastapi import APIRouter, Depends, Path, Query
+from fastapi.encoders import jsonable_encoder
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Session
+
+from app.test.dto.request.submit_test_request import SubmitTestRequestDTO
+from app.test.dto.response.submit_test_response import SubmitTestResponseDTO
 from database.dependency import get_db
 from app.test.dto.request.test_request import TestRequest
 from app.test.dto.response.test_response import TestResponse
@@ -12,11 +17,10 @@ from app.test.usecase.create_today_questions_usecase import create_today_questio
 from app.test.usecase.test_mode_usecase import test_mode_usecase
 from app.test.dto.response.test_mode_response import TestModeResponse
 # 시험 결과 제출 (시험 모드)
-from app.test.dto.request.submit_test_request import SubmitTestRequest
-from app.test.dto.response.submit_test_response import SubmitTestResponse
-from app.test.usecase.submit_test_usecase import submit_test_usecase
+
+from app.test.usecase.submit_test_usecase import SubmitTestUsecase
 from domain.user.entity.user import User
-from core.auth import get_current_user
+from app.auth.dependency import get_current_user
 # 문제 풀기 (쉬엄 모드)
 from app.test.usecase.rest_mode_usecase import rest_mode_usecase
 from app.test.dto.response.rest_mode_response import RestModeResponse
@@ -30,8 +34,9 @@ from app.test.dto.response.create_ai_explanation_response import CreateAIExplana
 # 개발자에게 피드백 제출하기
 from app.test.dto.request.send_answer_feedback_request import SendAnswerFeedbackRequest
 from app.test.dto.response.send_answer_feedback_response import SendAnswerFeedbackResponse
+from exception.success import ok
 
-router = APIRouter(prefix="/test", tags=["test"])
+router = APIRouter()
 
 
 @router.post("/", response_model=TestResponse)
@@ -62,17 +67,6 @@ async def test_mode(
     return await test_mode_usecase(exam_id, db)
 
 
-# 시험 결과 제출 (시험 모드)
-@router.post("/submit/{test_id}", response_model=SubmitTestResponse)
-async def submit_test(
-    test_id: str = Path(...),
-    request: SubmitTestRequest = Depends(),
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
-):
-    return await submit_test_usecase(test_id, request, db, current_user)
-
-
 # 문제 풀기 (쉬엄 모드)
 @router.get("/rest-mode/{question_count}", response_model=RestModeResponse)
 async def get_relax_mode_questions(
@@ -101,3 +95,18 @@ async def create_ai_explanation(
     current_user: User = Depends(get_current_user)
 ):
     return await create_ai_explanation_usecase(exam_id, db, current_user)
+
+
+@router.post("/submit-test/{exam_id}", response_model=SubmitTestResponseDTO)
+async def submit_test(
+        payload: SubmitTestRequestDTO,
+        exam_id: int = Path(..., gt=0),
+        db: AsyncSession = Depends(get_db),
+        user: User = Depends(get_current_user)
+):
+    usecase = SubmitTestUsecase(db)
+
+    result = await usecase.execute(user.id, exam_id, payload)
+    safe_data = jsonable_encoder(result)
+    return ok(data=safe_data, message="시험 제출 성공")
+
