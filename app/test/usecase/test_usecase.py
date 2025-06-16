@@ -1,20 +1,46 @@
-# from sqlalchemy.orm import Session
-# from app.test.dto.request.test_request import TestRequest
-# from app.test.dto.response.test_response import TestResponse
-# from domain.test.service.test_service import TestService
-#
-# def create_test_usecae(db: Session, request: TestRequest) -> TestResponse:
-#     service = TestService(db)
-#     new_test = service.create_test(request.name)
-#     return TestResponse.from_orm(new_test)
-#
-# def get_tests_usecase(db: Session) -> list[TestResponse]:
-#     service = TestService(db)
-#     tests = service.get_tests()
-#     return [TestResponse.model_validate(t) for t in tests]
-def create_test_usecae():
-    return None
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
+from domain.test.entity.exam import Exam
+from domain.test.entity.question import Question
+from domain.user.entity.user import User
+from exception.client_exception import NotFoundException
+from exception.success import ok
 
+async def get_test_mode_usecase(
+    exam_id: int,
+    current_user: User,
+    db: AsyncSession
+):
+    result = await db.execute(
+        select(Exam).where(Exam.id == exam_id)
+    )
+    exam = result.scalars().first()
 
-def get_tests_usecase():
-    return None
+    if not exam:
+        raise NotFoundException("시험 정보를 찾을 수 없습니다.")
+
+    result = await db.execute(
+        select(Question).where(Question.exam_id == exam_id)
+    )
+    questions = result.scalars().all()
+
+    question_list = [
+        {
+            "answer_rate": float(q.answer_rate) if q.answer_rate is not None else None,
+            "section": q.section,
+            "description": q.description,
+            "description_detail": q.description_detail,
+            "description_image": q.description_image,
+            "options": q.options,
+            "option_explanations": None  # GPT 해설 붙일 자리
+        }
+        for q in questions
+    ]
+
+    return ok(
+        data={
+            "pass_rate": float(exam.pass_rate) if exam.pass_rate is not None else None,
+            "questions": question_list
+        },
+        message="시험 조회 성공"
+    )

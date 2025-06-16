@@ -26,6 +26,13 @@ class KakaoSettings(BaseSettings):
         env_file_encoding = "utf-8"
         extra = "ignore"
 
+class GPTSetting(BaseSettings):
+    OPENAI_API_KEY: str = ""
+
+    class Config:
+        env_file = ".env.dev"
+        env_file_encoding = "utf-8"
+        extra = "ignore"
 
 class AWSSettings(BaseSettings):
     AWS_ACCESS_KEY_ID: str = ""
@@ -41,4 +48,5 @@ class AWSSettings(BaseSettings):
 
 settings = JwtSetting()
 kakao_settings = KakaoSettings()
+gpt_settings = GPTSetting()
 aws_settings = AWSSettings()
