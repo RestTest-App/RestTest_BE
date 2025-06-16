@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, Path, Query
 from sqlalchemy.orm import Session
 from database.dependency import get_db
 from sqlalchemy.ext.asyncio import AsyncSession
+from exception.success import ok
 
 # 오늘의 문제
 # 문제 풀기 (시험 모드)
@@ -163,14 +164,16 @@ async def get_exam_sections_by_exam_id(
     exam_id: int,
     db: AsyncSession = Depends(get_db)
 ):
-    return await get_exam_sections_by_exam_id_usecase(exam_id, db)
+    result = await get_exam_sections_by_exam_id_usecase(exam_id, db)
+    return ok(data=[r.dict() for r in result], message="과목 목록 조회 성공")
 
 @router.get("/exam/{exam_id}/questions", response_model=list[GetQuestionResponse], summary="문제 목록 조회 API")
 async def get_questions_by_exam_id(
     exam_id: int,
     db: AsyncSession = Depends(get_db)
 ):
-    return await get_questions_by_exam_id_usecase(exam_id, db)
+    result = await get_questions_by_exam_id_usecase(exam_id, db)
+    return ok(data=[item.dict() for item in result], message="문제 목록 조회 성공")
 
 @router.post("/dummy-data", summary="유형별 Dummy Data 생성 API")
 async def create_dummy_data(
