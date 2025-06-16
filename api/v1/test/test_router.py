@@ -1,43 +1,23 @@
-from fastapi import APIRouter, Depends, Path, Query
+from fastapi import APIRouter, Depends, Path
 from fastapi.encoders import jsonable_encoder
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Session
-
 from app.test.dto.request.submit_test_request import SubmitTestRequestDTO
 from app.test.dto.response.submit_test_response import SubmitTestResponseDTO
 from database.dependency import get_db
 from sqlalchemy.ext.asyncio import AsyncSession
-
-# 오늘의 문제
-# 문제 풀기 (시험 모드)
 from app.test.usecase.test_mode_usecase import get_test_mode_usecase
-# 시험 결과 제출 (시험 모드)
-
 from app.test.usecase.submit_test_usecase import SubmitTestUsecase
-from domain.user.entity.user import User
 from app.auth.dependency import get_current_user
-# 문제 풀기 (쉬엄 모드)
 from app.test.usecase.rest_mode_usecase import rest_mode_usecase
 from app.test.dto.response.rest_mode_response import RestModeResponse
-# 문제 풀기 (오늘의 문제)
 from domain.user.entity.user import User
-from app.test.dto.response.today_questions_response import TodayQuestionsResponse
-from app.test.usecase.today_questions_usecase import today_questions_usecase
-# AI 해설 생성하기
-from app.test.usecase.create_ai_explanation_usecase import create_ai_explanation_usecase
-from app.test.dto.response.create_ai_explanation_response import CreateAIExplanationResponse
-# 개발자에게 피드백 제출하기
-from app.test.dto.request.send_answer_feedback_request import SendAnswerFeedbackRequest
-from app.test.dto.response.send_answer_feedback_response import SendAnswerFeedbackResponse
 from exception.success import ok
-
 # 문제, 시험 등록하기
 from app.test.dto.request.create_exam_request import CreateExamRequest
 from app.test.dto.response.create_exam_response import CreateExamResponse
 from app.test.dto.request.create_question_request import CreateQuestionRequest
 from app.test.dto.response.create_question_response import CreateQuestionResponse
 from app.test.usecase.question_usecase import create_question_usecase
-
 # 자격증 등록하기
 from app.test.dto.request.create_certificate_request import CreateCertificateRequest
 from app.test.dto.response.create_certificate_response import CreateCertificateResponse
@@ -51,26 +31,20 @@ from app.test.dto.response.get_exam_section_response import GetExamSectionRespon
 from app.test.usecase.exam_section_usecase import get_exam_sections_by_exam_id_usecase
 from app.test.dto.response.get_question_response import GetQuestionResponse
 from app.test.usecase.question_usecase import get_questions_by_exam_id_usecase
-
 #더미 데이터 생성
 from app.test.usecase.dummy_data_usecase import create_dummy_data_usecase
 from app.test.usecase.dummy_data_usecase import reset_dummy_data_usecase
 from app.test.dto.request.create_dummy_data_request import CreateDummyDataRequest
-
-
 #시험모드 문제 리스트 출력
 from app.test.dto.response.get_certificates_exam_list_response import GetCertificatesExamListResponse
 from app.test.usecase.exam_usecase import get_certificates_exam_list_usecase
 from app.test.usecase.exam_usecase import create_exam_usecase
 from app.test.usecase.exam_usecase import get_exam_info_usecase
-
 #시험모드에서 문제 내용 받기
 from app.test.usecase.test_usecase import get_test_mode_usecase
-
 #ai 해설 추가하기 & 오늘의 문제 만들기
 from app.test.usecase.create_ai_explanation_usecase import create_ai_explanation_usecase
 from app.test.usecase.create_today_test_usecase import create_today_questions_usecase
-
 #이메일 보내기
 from app.test.usecase.send_feedback_usecase import send_feedback_usecase
 from app.test.dto.request.feedback_request_dto import FeedbackRequestDTO

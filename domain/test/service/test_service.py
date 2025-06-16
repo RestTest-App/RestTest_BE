@@ -1,7 +1,4 @@
-from typing import Optional, Tuple, List, Any, Coroutine, Dict
-
-from typing_inspection.typing_objects import is_concatenate
-
+from typing import Optional, List, Any, Dict
 from app.test.dto.response.answer_info import AnswerInfoDto
 from app.test.dto.response.section_info import SectionInfoDto
 from domain.test.entity import Question
