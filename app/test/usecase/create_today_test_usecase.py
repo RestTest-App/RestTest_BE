@@ -159,6 +159,12 @@ async def create_today_questions_usecase(certificate_id: int, current_user: User
 
         await db.commit()
 
+        result = await db.execute(
+            select(TodayTestQuestion)
+            .where(TodayTestQuestion.today_test_by_ai_id == today_test.id)
+        )
+        questions = result.scalars().all()
+
         return ok(
             data={
                 "question_count": len(questions),
