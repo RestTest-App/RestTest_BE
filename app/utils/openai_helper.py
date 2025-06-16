@@ -1,11 +1,27 @@
 import os
 import json
+
+from dotenv import load_dotenv
 from openai import OpenAI
 from app.utils.logger import logger
 from exception.client_exception import UnprocessableEntityException
 
-# .env.dev에서 OPENAI_API_KEY 직접 불러오기
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+
+# openai api key 분기처리
+MODE = os.getenv("MODE", "dev")
+
+if MODE == "dev":
+    load_dotenv(".env.dev")
+elif MODE == "prod":
+    load_dotenv(".env.prod")
+
+_api_key = os.getenv("OPENAI_API_KEY")
+if not _api_key:
+    raise RuntimeError(f"OPENAI_API_KEY가 설정되지 않았습니다. (MODE={MODE})")
+
+
+
+client = OpenAI(api_key=_api_key)
 
 async def generate_option_explanations(question: dict) -> list[str]:
     """

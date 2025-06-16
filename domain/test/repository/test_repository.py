@@ -1,3 +1,13 @@
+
+from datetime import datetime
+from pyexpat.errors import messages
+from typing import Sequence, Dict, List
+from sqlalchemy import select
+from sqlalchemy.dialects.mysql import insert
+from sqlalchemy.ext.asyncio import AsyncSession
+from domain.test.entity import Question, TestTracker, UserQuestionTracker, ExamSection
+from domain.test.entity.exam import Exam
+from exception.client_exception import NotFoundException
 from domain.test.entity.exam import Exam
 from sqlalchemy.ext.asyncio import AsyncSession
 from domain.test.entity.question import Question
@@ -5,7 +15,6 @@ from domain.user.entity.certificate import Certificate
 from domain.test.entity.exam_section import ExamSection
 from sqlalchemy import select
 from sqlalchemy import func
-
 
 
 class TestRepository:
@@ -18,6 +27,69 @@ class TestRepository:
         await self.db.commit()
         await self.db.refresh(test)
         return test
+
+    # 정답 불러오기 (시험모드)
+    async def get_questions_from_exam(self, exam_id: int) -> List[Question]:
+        result = await self.db.execute(
+            select(Question).where(Question.exam_id == exam_id).order_by(Question.id)
+        )
+        return result.scalars().all()
+
+
+    # test tracker 등록
+    async def create_user_test_tracker(self, user_id: int, exam_id: int, is_passed: bool, correct_count: int, total_count: int, solved_at: datetime) -> TestTracker:
+        test_score = int((correct_count / total_count) * 100)
+        tracker = TestTracker(
+            user_id=user_id,
+            exam_id=exam_id,
+            solved_at=solved_at,
+            score=test_score,
+            is_passed=is_passed
+        )
+        self.db.add(tracker)
+        await self.db.commit()
+        await self.db.refresh(tracker)
+        return tracker
+
+
+    # question trakcer 등록하기
+    async def create_user_question_tracker(
+            self,
+            test_tracker_id: int,
+            records: List[Dict],
+    ) -> None:
+        instances = [
+            UserQuestionTracker(
+                study_tracker_id=test_tracker_id,
+                question_id=record["question_id"],
+                selected_answer=record["selected_answer"],
+                is_correct=record["is_correct"],
+                add_to_review=False,
+            )
+            for record in records
+        ]
+        self.db.add_all(instances)
+        await self.db.flush()
+
+
+
+    # section 불러오기
+    async def get_section_names(self, section_ids: List[int]) -> Dict[int, str]:
+        result = await self.db.execute(
+            select(ExamSection).where(ExamSection.id.in_(section_ids))
+        )
+        sections = result.scalars().all()
+        return {section.id: section.name for section in sections}
+
+    # 시험 가져오기
+    async def get_exam(self, exam_id: int) -> Exam:
+        result = await self.db.execute(
+            select(Exam).where(Exam.id == exam_id)
+        )
+        exam: Exam | None = result.scalar_one_or_none()
+        if exam is None:
+            raise NotFoundException(message="시험을 찾을 수 없습니다.")
+        return exam
 
     async def get_test_all(self) -> list[Exam]:
         result = await self.db.execute(select(Exam))
