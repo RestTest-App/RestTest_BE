@@ -7,11 +7,10 @@ from domain.user.repository.certificate_repository import CertificateRepository
 
 
 class CertificateService:
-    def __init__(self, repository: CertificateRepository):
-        self.repository = repository
 
-    async def fetch(self, db: AsyncSession, offset: int, limit: int) -> (List[CertificateDto], int):
-        certificates, total = await self.repository.get_certificates_list(db, offset, limit)
+    @staticmethod
+    async def fetch_certificates(db: AsyncSession, offset: int, limit: int) -> (List[CertificateDto], int):
+        certificates, total = await CertificateRepository.get_certificates_list(db, offset, limit)
         certificates_list = [
             CertificateDto(certificate_id=certificate.id, name=certificate.name) for certificate in certificates
         ]
