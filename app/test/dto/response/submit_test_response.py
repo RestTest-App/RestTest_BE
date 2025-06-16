@@ -1,11 +1,13 @@
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, List
 
 from app.test.dto.response.answer_info import AnswerInfoDto
+from app.test.dto.response.section_info import SectionInfoDto
 from app.test.dto.response.test_log import TestLogDto
 
 
 class SubmitTestResponseDTO(BaseModel):
     test_log: TestLogDto
-    correct_answer: list[int]
+    correct_answer: List[int]
     correct_answer_info: Optional[AnswerInfoDto]
+    section_info: List[SectionInfoDto]
