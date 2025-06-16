@@ -9,5 +9,5 @@ from app.test.dto.response.test_log import TestLogDto
 class SubmitTestResponseDTO(BaseModel):
     test_log: TestLogDto
     correct_answer: List[int]
-    correct_answer_info: Optional[AnswerInfoDto]
+    correct_answer_info: List[AnswerInfoDto]
     section_info: List[SectionInfoDto]
