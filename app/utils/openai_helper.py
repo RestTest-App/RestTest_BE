@@ -73,7 +73,8 @@ async def generate_today_questions(certificate_name: str) -> list[dict]:
   }},
   ...
 ]
-반드시 유효한 JSON으로만 출력해 주세요.
+반드시 유효한 JSON 배열만 출력해 주세요.
+코드블럭(```json`, ```)은 포함하지 마세요.
     """
 
     try:

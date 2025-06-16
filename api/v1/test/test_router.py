@@ -54,7 +54,7 @@ from app.test.usecase.test_usecase import get_test_mode_usecase
 
 #ai 해설 추가하기 & 오늘의 문제 만들기
 from app.test.usecase.create_ai_explanation_usecase import create_ai_explanation_usecase
-from app.test.usecase.create_today_test_usecase import create_today_questions_usecase
+from app.test.usecase.create_today_test_usecase import create_today_questions_usecase, get_today_questions_usecase, submit_today_test_usecase
 
 #이메일 보내기
 from app.test.usecase.send_feedback_usecase import send_feedback_usecase
@@ -74,6 +74,20 @@ async def create_today_questions(
         current_user=current_user,
         db=db
     )
+
+@router.get("/today-questions")
+async def get_today_questions(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    return await get_today_questions_usecase(current_user, db)
+
+@router.post("/submit-today-test")
+async def submit_today_test(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    return await submit_today_test_usecase(current_user, db)
 
 # 시험 결과 제출 (시험 모드)
 @router.post("/submit/{test_id}", response_model=SubmitTestResponse)
@@ -101,7 +115,6 @@ async def create_exam(
     db: AsyncSession = Depends(get_db)
 ):
     return await create_exam_usecase(request, db)
-
 
 @router.get("/exam/{exam_id}/info", summary="시험 정보 조회 API")
 async def get_exam_info(

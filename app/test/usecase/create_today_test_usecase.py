@@ -2,14 +2,95 @@ from datetime import datetime, date
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, and_
 from app.utils.openai_helper import generate_today_questions
-from domain.test.entity.today_test import TodayTest
-from domain.test.entity.today_test_question import TodayTestQuestion
-from domain.test.entity.user_today_test import UserTodayTest
 from domain.user.entity.certificate import Certificate
 from domain.user.entity.user import User
 from exception.client_exception import NotFoundException, ConflictException
 from exception.server_exception import InternalServerErrorException
+from domain.test.entity.today_test import TodayTest
+from domain.test.entity.today_test_question import TodayTestQuestion
 from exception.success import ok
+from domain.test.entity.user_today_test import UserTodayTest
+
+async def submit_today_test_usecase(current_user: User, db: AsyncSession):
+    user_id = current_user.id
+    try:
+        # 오늘 날짜의 user_today_test 가져오기
+        today = datetime.utcnow().date()
+
+        result = await db.execute(
+            select(UserTodayTest)
+            .where(UserTodayTest.user_id == user_id)
+            .where(UserTodayTest.created_at >= today)
+        )
+        user_today_test = result.scalars().first()
+
+        if not user_today_test:
+            raise NotFoundException("오늘의 문제 응시 기록이 없습니다.")
+
+        user_today_test.is_solved = True
+        await db.commit()
+
+        return ok(message="오늘의 문제 제출 완료")
+
+    except NotFoundException:
+        raise
+    except Exception as e:
+        await db.rollback()
+        raise InternalServerErrorException(f"서버 오류: {str(e)}")
+
+
+async def get_today_questions_usecase(current_user: User, db: AsyncSession):
+    try:
+        # 1. 오늘 날짜 기준 TodayTest 조회
+        today = datetime.utcnow().date()
+        result = await db.execute(
+            select(TodayTest).where(
+                TodayTest.created_at >= datetime(today.year, today.month, today.day)
+            )
+        )
+        today_test = result.scalars().first()
+        if not today_test:
+            raise NotFoundException("오늘의 문제가 존재하지 않습니다.")
+
+        # 2. UserTodayTest에서 해당 유저가 응시한 적 있는지 확인
+        result = await db.execute(
+            select(UserTodayTest).where(
+                UserTodayTest.user_id == current_user.id,
+                UserTodayTest.today_test_id == today_test.id
+            )
+        )
+        user_today = result.scalars().first()
+        is_solved = user_today.is_solved if user_today else False
+
+        # 3. 오늘의 문제들 조회
+        result = await db.execute(
+            select(TodayTestQuestion).where(
+                TodayTestQuestion.today_test_by_ai_id == today_test.id
+            )
+        )
+        questions = result.scalars().all()
+
+        return ok(
+            data={
+                "is_solved": is_solved,
+                "question_count": len(questions),
+                "question": [
+                    {
+                        "question_id": q.id,
+                        "description": q.description,
+                        "description_detail": q.description_detail,
+                        "options": q.options,
+                        "answer": q.answer,
+                        "option_explanations": q.option_explanations
+                    }
+                    for q in questions
+                ]
+            },
+            message="오늘의 문제 조회 성공"
+        )
+    except Exception as e:
+        await db.rollback()
+        raise InternalServerErrorException(f"서버 오류: {str(e)}")
 
 async def create_today_questions_usecase(certificate_id: int, current_user: User, db: AsyncSession):
     try:
