@@ -22,7 +22,7 @@ class TestRepository:
         return self.db.query(Exam).all()
 
     # 정답 불러오기 (시험모드)
-    async def get_test_correct_answer(self, exam_id: int) -> Sequence[Question]:
+    async def get_questions_from_exam(self, exam_id: int) -> List[Question]:
         result = await self.db.execute(
             select(Question).where(Question.exam_id == exam_id).order_by(Question.id)
         )
@@ -32,26 +32,17 @@ class TestRepository:
     # test tracker 등록
     async def create_user_test_tracker(self, user_id: int, exam_id: int, is_passed: bool, correct_count: int, total_count: int, solved_at: datetime) -> TestTracker:
         test_score = int((correct_count / total_count) * 100)
-        result = await self.db.execute(
-            insert(TestTracker).values(
-                user_id=user_id,
-                exam_id=exam_id,
-                is_passed=is_passed,
-                score=test_score,
-                solved_at=solved_at
-            )
-        )
-        tracker_id = result.inserted_primary_key[0]
-        await self.db.commit()
-        await self.db.refresh(tracker_id)
-        return TestTracker(
-            id=tracker_id,
-            exam_id=exam_id,
+        tracker = TestTracker(
             user_id=user_id,
-            is_passed=is_passed,
+            exam_id=exam_id,
+            solved_at=solved_at,
             score=test_score,
-            solved_at=solved_at
+            is_passed=is_passed
         )
+        self.db.add(tracker)
+        await self.db.commit()
+        await self.db.refresh(tracker)
+        return tracker
 
 
     # question trakcer 등록하기
@@ -60,9 +51,19 @@ class TestRepository:
             test_tracker_id: int,
             records: List[Dict],
     ) -> None:
-        await self.db.execute(insert(UserQuestionTracker), records)
-        await self.db.commit()
-        await self.db.refresh(test_tracker_id)
+        instances = [
+            UserQuestionTracker(
+                study_tracker_id=test_tracker_id,
+                question_id=record["question_id"],
+                selected_answer=record["selected_answer"],
+                is_correct=record["is_correct"],
+                add_to_review=False,
+            )
+            for record in records
+        ]
+        self.db.add_all(instances)
+        await self.db.flush()
+
 
 
     # section 불러오기

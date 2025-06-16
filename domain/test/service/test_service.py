@@ -9,39 +9,42 @@ from exception.client_exception import BadRequestException
 
 
 class TestService:
-    def __init__(self):
-        pass
 
     # 사용자 정답지 채점
     @staticmethod
     async def check_user_submit(
-            self,
             user_answers: List[Optional[int]],
             questions: List[Question]
     ) -> tuple[int | Any, list[int], list[int | None], list[dict]]:
 
         correct_answers = [question.answer for question in questions] # 정답 리스트
-
         correct_count = 0
         info_list: List[AnswerInfoDto] = [] # 문제별 답, 해설 dto 리스트
         per_question: List[Dict] = []
 
         for idx, question in enumerate(questions):
-            # 사용자가 선택한 답 가져오기 (null -> None 처리)
+            # 답이 없으면 None 처리
             user_answer = user_answers[idx] if idx < len(user_answers) else None
-            is_correct = (user_answer is not None and user_answer == question.answer)
 
-            if not (1 <= user_answer <= len(question.options)):
-                raise BadRequestException(message="보기 범위를 벗어났습니다.")
+            # None이 아닐 때만 범위 검사
+            if user_answer is not None:
+                if not (1 <= user_answer <= len(question.options)):
+                    raise BadRequestException(message="보기 범위를 벗어났습니다.")
+                is_correct = (user_answer == question.answer)
+            else:
+                is_correct = False
 
+            # 정답 카운트
             if is_correct:
                 correct_count += 1
 
+            # 문제별 해설 DTO
             info_list.append(AnswerInfoDto(
                 answer=question.answer,
-                option_explanation=question.option_explanations
+                option_explanations=question.option_explanations
             ))
 
+            # 문제별 사용자 응답 기록
             per_question.append({
                 "question_id": question.id,
                 "selected_answer": user_answer,
@@ -49,13 +52,12 @@ class TestService:
                 "exam_section_id": question.exam_section_id,
             })
 
-        return correct_count, correct_answers, user_answers, per_question
+        return correct_count, correct_answers, info_list, per_question
 
 
     # 과목별 점수 및 통계
     @staticmethod
     async def section_status(
-            self,
             per_question: List[dict],
             section_names: Dict[int, str],
     ) -> List[SectionInfoDto]:
@@ -82,6 +84,6 @@ class TestService:
     # 합불 결정
     @staticmethod
     async def pass_or_unpass(
-            self, correct_count: int, total: int, pass_grade: int
+            correct_count: int, total: int, pass_grade: float=0.7
     ) -> bool:
         return (correct_count / total) >= pass_grade
