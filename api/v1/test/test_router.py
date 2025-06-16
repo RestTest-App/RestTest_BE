@@ -55,7 +55,7 @@ from app.test.dto.request.feedback_request_dto import FeedbackRequestDTO
 router = APIRouter()
 
 # 오늘의 문제
-@router.post("/create-today-questions/{certificate_id}", summary="오늘의 문제 생성 또는 불러오기")
+@router.post("/create-today-questions/{certificate_id}", summary="오늘의 문제 생성")
 async def create_today_questions(
     certificate_id: int = Path(..., description="자격증 ID"),
     current_user: User = Depends(get_current_user),
