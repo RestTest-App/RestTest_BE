@@ -1,4 +1,6 @@
-from sqlalchemy import Sequence
+from typing import List
+
+from sqlalchemy import Sequence, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from domain.user.entity.certificate import Certificate
 from domain.user.entity.user import User
@@ -30,3 +32,14 @@ class CertificateRepository:
         await db.commit()
         await db.refresh(user)
         return user
+
+
+    @staticmethod
+    async def get_certificates_list(db: AsyncSession, offset: int, limit: int) -> (List[Certificate], int):
+        result = await db.execute(
+            select(Certificate).offset(offset).limit(limit)
+        )
+        certificates = result.scalars().all()
+        total_result = await db.execute(select(Certificate))
+        total = len(total_result.scalars().all())
+        return certificates, total
