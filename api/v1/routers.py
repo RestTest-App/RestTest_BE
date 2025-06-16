@@ -14,5 +14,4 @@ router.include_router(auth_router.router, tags=["auth"], prefix="/auth")
 router.include_router(user_router.router, tags=["user"], prefix="/user")
 router.include_router(studybook_router.router, tags=["studybook"], prefix="/studybook")
 router.include_router(studybook_question_router, tags=["studybook_question"], prefix="/studybook-question")
-
-router.include_router(test_router, tags=["test"], prefix="/test")
+router.include_router(test_router.router, tags=["test"], prefix="/test")
