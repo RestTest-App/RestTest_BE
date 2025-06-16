@@ -35,7 +35,8 @@ class SubmitTestUsecase:
         )
 
         # 합불
-        is_passed = await self.service.pass_or_unpass(correct_count=correct_count, total=total)
+        exam = await self.repository.get_exam(exam_id)
+        is_passed = await self.service.pass_or_unpass(correct_count=correct_count, total=total, pass_grade=int(exam.pass_rate))
 
         solved_at = datetime.now(ZoneInfo("Asia/Seoul"))
 

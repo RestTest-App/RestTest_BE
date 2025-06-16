@@ -1,10 +1,12 @@
 from datetime import datetime
+from pyexpat.errors import messages
 from typing import Sequence, Dict, List
 from sqlalchemy import select
 from sqlalchemy.dialects.mysql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 from domain.test.entity import Question, TestTracker, UserQuestionTracker, ExamSection
 from domain.test.entity.exam import Exam
+from exception.client_exception import NotFoundException
 
 
 class TestRepository:
@@ -73,3 +75,13 @@ class TestRepository:
         )
         sections = result.scalars().all()
         return {section.id: section.name for section in sections}
+
+    # 시험 가져오기
+    async def get_exam(self, exam_id: int) -> Exam:
+        result = await self.db.execute(
+            select(Exam).where(Exam.id == exam_id)
+        )
+        exam: Exam | None = result.scalar_one_or_none()
+        if exam is None:
+            raise NotFoundException(message="시험을 찾을 수 없습니다.")
+        return exam

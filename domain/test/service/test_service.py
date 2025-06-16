@@ -84,6 +84,6 @@ class TestService:
     # 합불 결정
     @staticmethod
     async def pass_or_unpass(
-            correct_count: int, total: int, pass_grade: float=0.7
+            correct_count: int, total: int, pass_grade: float
     ) -> bool:
         return (correct_count / total) >= pass_grade
