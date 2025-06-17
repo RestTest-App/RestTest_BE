@@ -6,6 +6,6 @@ from app.review.dto.response.exam_item_info import ExamItemInfo
 
 
 class ReviewNoteListResponseDto(BaseModel):
-    category: str
+    category: List[str]
     selected_category: str
     exams: List[ExamItemInfo]

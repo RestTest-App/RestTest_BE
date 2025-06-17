@@ -9,6 +9,6 @@ from app.review.dto.response.question_info import QuestionInfo
 
 class ReviewNoteDetailResponseDto(BaseModel):
     review_note_id: int
-    created_at:     datetime
-    exam:           ExamInfo
-    questions:      List[QuestionInfo]
+    created_at: datetime
+    exam: ExamInfo
+    questions: List[QuestionInfo]
