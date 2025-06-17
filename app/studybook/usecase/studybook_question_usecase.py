@@ -1,12 +1,14 @@
 from sqlalchemy.orm import Session
+
+from domain.studybook.entity import StudyBookQuestion
 from domain.studybook.studybook_question.service.studybook_question_service import register_question
-from app.studybook.dto.response.upload_studybook_response_dto import UploadStudybookResponseDTO
 from domain.user.entity.user import User
 from domain.studybook.entity.studybook import StudyBook
 from exception.client_exception import (
-    NotFoundException, BadRequestException
+    NotFoundException, BadRequestException, ForbiddenException
 )
-from exception.success import created
+from app.utils.dto.success import ok, created
+
 
 async def get_studybook_questions_usecase(
     studybook_id: int,

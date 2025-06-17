@@ -4,8 +4,7 @@ from domain.test.entity.question import Question
 from domain.test.entity.exam import Exam
 from app.utils.openai_helper import generate_option_explanations
 from exception.client_exception import NotFoundException
-from exception.success import ok
-
+from app.utils.dto.success import created, ok
 async def create_ai_explanation_usecase(exam_id: int, db: AsyncSession):
     exam = await db.get(Exam, exam_id)
     if not exam:

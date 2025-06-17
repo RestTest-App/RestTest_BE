@@ -8,7 +8,7 @@ from fastapi import Depends
 from database.dependency import get_db
 from domain.auth.service.auth_service import AuthService
 from exception.client_exception import UnauthorizedException, NotFoundException
-from core.security import JWTService
+from domain.auth.service.jwt_service import JWTService
 
 # Auth 의존성
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")

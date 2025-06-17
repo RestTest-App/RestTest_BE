@@ -2,10 +2,9 @@ from typing import Optional
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from core.security import JWTService
+from domain.auth.service.jwt_service import JWTService
 from domain.auth.dto.user_create_dto import UserCreateDTO
 from domain.auth.repository.auth_repository import AuthRepository
-from domain.auth.repository.token_repository import TokenStore, token_store
 from domain.user.entity import User
 from domain.user.repository.certificate_repository import CertificateRepository
 from exception.client_exception import NotFoundException, ForbiddenException, ConflictException
@@ -47,15 +46,7 @@ class AuthService:
         if not user:
             raise NotFoundException(message="사용자를 찾을 수 없습니다.")  # 404
         return user
-
-    # 로그아웃
-    @staticmethod
-    async def sign_out(refresh_token: str, store: TokenStore = token_store) -> None:
-        jwt_service = JWTService()
-        jwt_service.verify_token(refresh_token)
-        if await store.is_revoked(refresh_token):
-            return
-        await store.revoke(refresh_token)
+    
 
     # 회원탈퇴
     @staticmethod

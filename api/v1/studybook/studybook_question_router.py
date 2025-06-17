@@ -10,6 +10,7 @@ from app.studybook_question.usecase.studybook_question_usecase import (
     update_studybook_question_usecase
 )
 
+
 router = APIRouter()
 
 @router.post("/{studybook_id}")

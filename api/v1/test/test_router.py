@@ -3,6 +3,7 @@ from fastapi.encoders import jsonable_encoder
 from sqlalchemy.orm import Session
 from app.test.dto.request.submit_test_request import SubmitTestRequestDTO
 from app.test.dto.response.submit_test_response import SubmitTestResponseDTO
+from app.utils.dto.success import ok
 from database.dependency import get_db
 from sqlalchemy.ext.asyncio import AsyncSession
 # 오늘의 문제
