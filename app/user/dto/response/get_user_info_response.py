@@ -1,5 +1,5 @@
 import datetime
-from typing import List
+from typing import List, Optional
 
 from pydantic import BaseModel, ConfigDict
 
@@ -11,4 +11,4 @@ class GetUserInfoResponse(BaseModel):
     nickname: str
     created_at: datetime.datetime
     total_study_days: int
-    monthly_study_date: List[int]
+    monthly_study_date: Optional[List[int]] = None
