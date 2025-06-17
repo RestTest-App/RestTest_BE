@@ -14,7 +14,8 @@ from app.auth.dependency import get_current_user
 from app.test.usecase.rest_mode_usecase import rest_mode_usecase
 from app.test.dto.response.rest_mode_response import RestModeResponse
 from domain.user.entity.user import User
-
+from exception.success import ok
+from sqlalchemy import text
 # 문제, 시험 등록하기
 from app.test.dto.request.create_exam_request import CreateExamRequest
 from app.test.dto.response.create_exam_response import CreateExamResponse
@@ -81,6 +82,20 @@ async def submit_today_test(
     db: AsyncSession = Depends(get_db)
 ):
     return await submit_today_test_usecase(current_user, db)
+
+@router.delete("/reset-today-test", summary="오늘의 문제 관련 테이블 초기화 (관리자 전용)")
+async def reset_today_test_tables(
+    db: AsyncSession = Depends(get_db)
+):
+    await db.execute(text("SET FOREIGN_KEY_CHECKS = 0;"))
+    await db.execute(text("TRUNCATE TABLE today_test_question;"))
+    await db.execute(text("TRUNCATE TABLE user_today_test;"))
+    await db.execute(text("TRUNCATE TABLE today_test;"))
+    await db.execute(text("SET FOREIGN_KEY_CHECKS = 1;"))
+    await db.commit()
+
+    return ok(message="오늘의 문제 테이블 초기화 완료")
+
 
 # 문제 풀기 (쉬엄 모드)
 @router.get("/rest-mode/{question_count}", response_model=RestModeResponse)
