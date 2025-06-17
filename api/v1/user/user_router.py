@@ -4,8 +4,9 @@ from fastapi.params import Depends
 from app.auth.dependency import get_current_user
 from app.user.dto.response.get_user_info_response import GetUserInfoResponse
 from app.user.dto.response.update_user_info_response import UpdateUserInfoResponse
-from core.security import JWTService
-from exception.success import ok
+from app.utils.dto.success import ok
+from domain.auth.service.jwt_service import JWTService
+
 
 router = APIRouter()
 
