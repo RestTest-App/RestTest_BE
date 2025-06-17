@@ -15,3 +15,4 @@ router.include_router(studybook_router.router, tags=["studybook"], prefix="/stud
 router.include_router(studybook_question_router.router, tags=["studybook_question"], prefix="/studybook-question")
 router.include_router(test_router.router, tags=["test"], prefix="/test")
 router.include_router(certificate_router.router, tags=["certificate"], prefix="/user")
+router.include_router(review_router.router, tags=["review"], prefix="/review")

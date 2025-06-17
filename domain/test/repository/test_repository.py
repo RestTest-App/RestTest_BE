@@ -13,7 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from domain.test.entity.question import Question
 from domain.user.entity.certificate import Certificate
 from domain.test.entity.exam_section import ExamSection
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy import func
 
 
@@ -70,6 +70,24 @@ class TestRepository:
         ]
         self.db.add_all(instances)
         await self.db.flush()
+
+
+    # 문제를 복습노트에 추가하기
+    async def add_question_to_review(
+            self,
+            study_tracker_id: int,
+            question_id: int,
+            add_to_review: bool = True,
+    ) -> None:
+        await self.db.execute(
+            update(UserQuestionTracker).where(
+                UserQuestionTracker.study_tracker_id == study_tracker_id,
+                UserQuestionTracker.question_id == question_id,
+            ).values(
+                add_to_review=add_to_review,
+            )
+        )
+        await self.db.commit()
 
 
 

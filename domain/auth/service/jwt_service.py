@@ -56,12 +56,13 @@ class JWTService:
 
 
     # 토큰 디코딩 및 유효성 예외처리
-    def verify_token(self, token: str) -> Dict:
+    @staticmethod
+    def verify_token(token: str) -> Dict:
         try:
             payload = jwt.decode(
                 token,
-                self.secret_key,
-                algorithms=[self.algorithm]
+                settings.JWT_SECRET_KEY,
+                algorithms=[settings.JWT_ALGORITHM]
             )
             return payload
         except ExpiredSignatureError:

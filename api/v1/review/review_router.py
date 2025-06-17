@@ -1,23 +1,31 @@
+from pyexpat.errors import messages
+
 from fastapi import APIRouter, Depends
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Session
 
+from app.auth.dependency import get_current_user
+from app.review.dto.request.add_review_note_test_request import AddReviewNoteTestRequestDto
 from app.review.dto.request.review_test_mode_request import ReviewTestModeRequest
 from app.review.dto.response.get_review_note_list_response import GetReviewNoteListResponse
 from app.review.dto.response.get_review_rest_mode_response import GetReviewRestModeResponse
 from app.review.dto.response.get_review_test_mode_response import GetReviewTestModeResponse
+from app.review.usecase.review_note_test_usecase import ReviewNoteTestUseCase
 from app.review.usecase.review_usecase import add_review_note_test_mode_usecase, get_review_note_list_usecase, \
     get_review_note_rest_mode_usecase, get_review_note_test_mode_usecase, delete_review_note_usecase
+from app.utils.dto.success import ok
 from database.dependency import get_db
+from domain.user.entity import User
 
 router = APIRouter()
 
-@router.post("/add-review-note-test-mode/{exam_id}", response_model=GetReviewTestModeResponse)
-async def add_review_note_test_mode(
-        exam_id: int,
-        request: ReviewTestModeRequest,
-        db: Session = Depends(get_db)
-):
-    return add_review_note_test_mode_usecase(db, request, exam_id=exam_id)
+# @router.post("/add-review-note-test-mode/{exam_id}", response_model=GetReviewTestModeResponse)
+# async def add_review_note_test_mode(
+#         exam_id: int,
+#         request: ReviewTestModeRequest,
+#         db: Session = Depends(get_db)
+# ):
+#     return add_review_note_test_mode_usecase(db, request, exam_id=exam_id)
 
 @router.get("/get-review-note-test-mode/{review_note_id}", response_model=GetReviewTestModeResponse)
 async def get_review_note_test_mode(review_note_id: int, db: Session = Depends(get_db)):
@@ -34,3 +42,18 @@ async def get_review_note_list(db: Session = Depends(get_db)):
 @router.delete("/delete-review-note/{reviewNoteId}")
 async def delete_review_note(reviewNoteId: int, db: Session = Depends(get_db)):
     return delete_review_note_usecase(db, review_note_id=reviewNoteId)
+
+@router.post("/add-review-note-test-mode/{exam_id}", response_model=None)
+async def add_review_note_test_mode(
+        request: AddReviewNoteTestRequestDto,
+        user: User = Depends(get_current_user),
+        db: AsyncSession = Depends(get_db)
+):
+    usecase = ReviewNoteTestUseCase()
+    await usecase.execute(
+        request=request,
+        user_id=user.id,
+        db=db
+    )
+    return ok(data=None, message="복습노트 추가 성공")
+
