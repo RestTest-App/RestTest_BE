@@ -1,6 +1,6 @@
 from app.utils.email_helper import send_feedback_email
 from app.test.dto.request.feedback_request_dto import FeedbackRequestDTO
-from exception.success import ok, created, no_content
+from app.utils.dto.success import created, ok, no_content
 
 async def send_feedback_usecase(dto: FeedbackRequestDTO):
     subject = f"[AI 해설 피드백] test_id={dto.test_id}, question_id={dto.question_id}"

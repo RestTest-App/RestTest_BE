@@ -3,7 +3,7 @@ from sqlalchemy.sql import func
 from app.test.dto.response.rest_mode_response import RestModeQuestionDTO
 from exception.client_exception import BadRequestException
 from exception.server_exception import InternalServerErrorException
-from exception.success import ok
+from app.utils.dto.success import created, ok
 from domain.test.entity.question import Question
 import random
 

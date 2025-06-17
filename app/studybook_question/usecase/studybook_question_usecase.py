@@ -5,7 +5,7 @@ from domain.user.entity.user import User
 from exception.client_exception import (
     NotFoundException, ForbiddenException, BadRequestException
 )
-from exception.success import created, ok
+from app.utils.dto.success import created, ok
 from sqlalchemy.future import select
 from sqlalchemy.ext.asyncio import AsyncSession
 

@@ -4,7 +4,7 @@ from domain.test.entity.exam import Exam
 from domain.test.entity.question import Question
 from domain.user.entity.user import User
 from exception.client_exception import NotFoundException
-from exception.success import ok
+from app.utils.dto.success import created, ok
 
 async def get_test_mode_usecase(
     exam_id: int,

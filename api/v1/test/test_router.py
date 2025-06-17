@@ -3,6 +3,7 @@ from fastapi.encoders import jsonable_encoder
 from sqlalchemy.orm import Session
 from app.test.dto.request.submit_test_request import SubmitTestRequestDTO
 from app.test.dto.response.submit_test_response import SubmitTestResponseDTO
+from app.utils.dto.success import ok
 from database.dependency import get_db
 from sqlalchemy.ext.asyncio import AsyncSession
 # 오늘의 문제
@@ -13,7 +14,7 @@ from app.auth.dependency import get_current_user
 from app.test.usecase.rest_mode_usecase import rest_mode_usecase
 from app.test.dto.response.rest_mode_response import RestModeResponse
 from domain.user.entity.user import User
-from exception.success import ok
+
 # 문제, 시험 등록하기
 from app.test.dto.request.create_exam_request import CreateExamRequest
 from app.test.dto.response.create_exam_response import CreateExamResponse
