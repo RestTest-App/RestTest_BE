@@ -143,6 +143,11 @@ class TestRepository:
         )
         return result.scalar()
 
+    async def get_exams_by_certificate_id(self, certificate_id: int) -> list[Exam]:
+        stmt = select(Exam).where(Exam.certificate_id == certificate_id)
+        result = await self.db.execute(stmt)
+        return result.scalars().all()
+
     async def get_exams_by_certificate_ids(self, certificate_ids: list[int]) -> list[Exam]:
         result = await self.db.execute(
             select(Exam)
@@ -162,3 +167,4 @@ class TestRepository:
             select(Exam).where(Exam.id == exam_id)
         )
         return result.scalars().first()
+

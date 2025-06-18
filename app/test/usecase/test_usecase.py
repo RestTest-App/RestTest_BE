@@ -3,8 +3,11 @@ from sqlalchemy.future import select
 from domain.test.entity.exam import Exam
 from domain.test.entity.question import Question
 from domain.user.entity.user import User
-from exception.client_exception import NotFoundException
 from exception.success import ok
+from sqlalchemy.ext.asyncio import AsyncSession
+from app.test.dto.response.exam_response_dto import ExamResponseDTO
+from domain.test.repository.test_repository import TestRepository
+from exception.client_exception import NotFoundException
 
 async def get_test_mode_usecase(
     exam_id: int,
@@ -44,3 +47,13 @@ async def get_test_mode_usecase(
         },
         message="시험 조회 성공"
     )
+
+async def get_exam_list_by_certificate_id_usecase(certificate_id: int, db: AsyncSession):
+    repo = TestRepository(db)
+    exams = await repo.get_exams_by_certificate_id(certificate_id)
+
+    if not exams:
+        raise NotFoundException("해당 자격증에 대한 시험이 존재하지 않습니다.")
+
+    exam_list = [ExamResponseDTO.from_orm(exam).model_dump() for exam in exams]
+    return ok(data={"exams": exam_list}, message="시험 리스트 조회 성공")
