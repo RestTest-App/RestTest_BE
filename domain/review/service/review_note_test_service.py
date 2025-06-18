@@ -69,7 +69,7 @@ class ReviewNoteTestService:
 
         return ReviewNoteListResponseDto(
             category = categories,
-            selected_category = selected,
+            selected_category = selected or "",
             exams = exams
         )
 
