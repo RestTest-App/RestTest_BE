@@ -1,11 +1,12 @@
 from pydantic_settings import BaseSettings
 
 
+# JWT
 class JwtSetting(BaseSettings):
     JWT_SECRET_KEY: str = ""
     JWT_ALGORITHM: str = ""
     JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = 0 # access token 만료 시간
-    JWT_REFRESH_TOKEN_EXPIRE_MINUTES: int = 0 # refresh token 만료 시간
+    JWT_REFRESH_TOKEN_EXPIRE_DAYS: int = 0 # refresh token 만료 일
 
     class Config:
         env_file = ".env.dev"
@@ -13,6 +14,7 @@ class JwtSetting(BaseSettings):
         extra = "ignore"
 
 
+# KAKAO
 class KakaoSettings(BaseSettings):
     KAKAO_CLIENT_ID: str = ""
     KAKAO_CLIENT_SECRET_KEY: str = ""
@@ -26,6 +28,8 @@ class KakaoSettings(BaseSettings):
         env_file_encoding = "utf-8"
         extra = "ignore"
 
+
+# OPENAI
 class GPTSetting(BaseSettings):
     OPENAI_API_KEY: str = ""
 
@@ -34,6 +38,8 @@ class GPTSetting(BaseSettings):
         env_file_encoding = "utf-8"
         extra = "ignore"
 
+
+# AWS
 class AWSSettings(BaseSettings):
     AWS_ACCESS_KEY_ID: str = ""
     AWS_SECRET_ACCESS_KEY: str = ""
@@ -46,7 +52,20 @@ class AWSSettings(BaseSettings):
         extra = "ignore"
 
 
+# REDIS
+class RedisSettings(BaseSettings):
+    REDIS_HOST: str = ""
+    REDIS_PORT: int
+
+    class Config:
+        env_file = ".env.dev"
+        env_file_encoding = "utf-8"
+        extra = "ignore"
+
+
+
 settings = JwtSetting()
 kakao_settings = KakaoSettings()
 gpt_settings = GPTSetting()
 aws_settings = AWSSettings()
+redis_settings = RedisSettings()

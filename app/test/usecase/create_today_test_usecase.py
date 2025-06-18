@@ -8,7 +8,7 @@ from exception.client_exception import NotFoundException, ConflictException
 from exception.server_exception import InternalServerErrorException
 from domain.test.entity.today_test import TodayTest
 from domain.test.entity.today_test_question import TodayTestQuestion
-from exception.success import ok
+from app.utils.dto.success import created, ok
 from domain.test.entity.user_today_test import UserTodayTest
 
 async def submit_today_test_usecase(current_user: User, db: AsyncSession):

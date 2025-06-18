@@ -20,6 +20,17 @@ services:
       timeout: 5s
       retries: 5
 
+  redis:
+    image: redis:7
+    container_name: redis-dev
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   fastapi:
     build:
       context: .
@@ -35,11 +46,17 @@ services:
       - .env.dev
     environment:
       - MODE=dev
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
     volumes:
       - ./:/code
     depends_on:
       mysql:
         condition: service_healthy
+      redis:
+        condition: service_healthy
+
+
 
 volumes:
   mysql-data:

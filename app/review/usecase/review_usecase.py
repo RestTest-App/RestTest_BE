@@ -7,37 +7,36 @@ from app.review.dto.response.get_review_test_mode_response import GetReviewTestM
 from domain.review.entity.review_note_by_rest import ReviewNoteByRest
 from domain.review.entity.review_note_by_rest_question import ReviewNoteByRestQuestion
 from domain.review.entity.review_note_by_test import ReviewNoteByTest
-from domain.review.repository.review_note_respository import ReviewNoteRepository
 
-def add_review_note_test_mode_usecase(
-        db: Session,
-        request: ReviewTestModeRequest,
-        exam_id : int,
-) -> GetReviewTestModeResponse:
-    repository = ReviewNoteRepository(db)
-
-    review_note = repository.create_review_note_test_mode(
-        user_id = 1,  # 실제 로그인한 사용자 ID로 대체
-        study_tracker_id = request.result_id # TODO() : 이거 뭔지 모르겟네..
-    )
-
-    return GetReviewTestModeResponse(
-        review_note_id=review_note.id,
-        created_at=review_note.created_at,
-        exam=ExamInfo(
-            exam_id=exam_id,
-            name="정보처리기사",
-            year=2024,
-            month=3,
-            trial=1,
-            time=90,
-            pass_rate=63.5,
-            score=450,
-            is_passed=True,
-            solved_at=review_note.created_at
-        ),
-        questions=[]
-    )
+# def add_review_note_test_mode_usecase(
+#         db: Session,
+#         request: ReviewTestModeRequest,
+#         exam_id : int,
+# ) -> GetReviewTestModeResponse:
+#     repository = ReviewNoteRepository(db)
+#
+#     review_note = repository.create_review_note_test_mode(
+#         user_id = 1,  # 실제 로그인한 사용자 ID로 대체
+#         study_tracker_id = request.result_id # TODO() : 이거 뭔지 모르겟네..
+#     )
+#
+#     return GetReviewTestModeResponse(
+#         review_note_id=review_note.id,
+#         created_at=review_note.created_at,
+#         exam=ExamInfo(
+#             exam_id=exam_id,
+#             name="정보처리기사",
+#             year=2024,
+#             month=3,
+#             trial=1,
+#             time=90,
+#             pass_rate=63.5,
+#             score=450,
+#             is_passed=True,
+#             solved_at=review_note.created_at
+#         ),
+#         questions=[]
+#     )
 
 def get_review_note_list_usecase(
         db: Session,

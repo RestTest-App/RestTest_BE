@@ -4,8 +4,9 @@ from fastapi.params import Depends
 from app.auth.dependency import get_current_user
 from app.user.dto.response.get_user_info_response import GetUserInfoResponse
 from app.user.dto.response.update_user_info_response import UpdateUserInfoResponse
-from core.security import JWTService
-from exception.success import ok
+from app.utils.dto.success import ok
+from domain.auth.service.jwt_service import JWTService
+
 
 router = APIRouter()
 
@@ -15,7 +16,11 @@ jwt_service = JWTService()
 # 사용자 정보 조회
 @router.get("/get-user-info", response_model=GetUserInfoResponse)
 async def get_user_info(user=Depends(get_current_user)):
-    user_info = GetUserInfoResponse.model_validate(user)
+    user_dict = user.__dict__.copy()
+    if isinstance(user_dict.get("monthly_study_date"), dict):
+        user_dict["monthly_study_date"] = None
+
+    user_info = GetUserInfoResponse.model_validate(user_dict)
     payload: dict = user_info.model_dump(mode="json")
     return ok(data=payload, message="사용자 정보 조회 성공")
 

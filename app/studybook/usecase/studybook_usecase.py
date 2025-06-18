@@ -18,12 +18,12 @@ import json
 from app.utils.gpt_ocr_processor import gpt_ocr_process
 
 from exception.client_exception import (
-    NotFoundException, BadRequestException, ConflictException,
+    NotFoundException, ConflictException,
     RequestEntityTooLargeException, UnsupportedMediaTypeException,
     UnprocessableEntityException
 )
 from exception.server_exception import InternalServerErrorException
-from exception.success import created, ok
+from app.utils.dto.success import created, ok
 
 logger = logging.getLogger(__name__)
 

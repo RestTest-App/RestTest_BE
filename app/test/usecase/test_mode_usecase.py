@@ -5,8 +5,7 @@ from sqlalchemy import select
 from domain.test.entity.exam import Exam
 from domain.test.entity.question import Question
 from exception.client_exception import NotFoundException
-from exception.success import ok
-
+from app.utils.dto.success import created, ok
 
 async def get_test_mode_usecase(exam_id: int, current_user: User, db: AsyncSession):
     result = await db.execute(select(Exam).where(Exam.id == exam_id))
