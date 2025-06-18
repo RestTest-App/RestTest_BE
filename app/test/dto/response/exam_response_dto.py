@@ -8,6 +8,7 @@ class ExamResponseDTO(BaseModel):
     trial: int | None
     time: int
     pass_rate: float | None
+    question_count: int
 
     class Config:
-        from_attributes = True  # ✅ Pydantic v2 대응
+        from_attributes = True

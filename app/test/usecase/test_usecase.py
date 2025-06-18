@@ -1,4 +1,4 @@
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import func
 from sqlalchemy.future import select
 from domain.test.entity.exam import Exam
 from domain.test.entity.question import Question
@@ -55,5 +55,16 @@ async def get_exam_list_by_certificate_id_usecase(certificate_id: int, db: Async
     if not exams:
         raise NotFoundException("해당 자격증에 대한 시험이 존재하지 않습니다.")
 
-    exam_list = [ExamResponseDTO.from_orm(exam).model_dump() for exam in exams]
+    exam_list = []
+
+    for exam in exams:
+        # 각 시험에 대해 문제 수 계산
+        stmt = select(func.count()).where(Question.exam_id == exam.id)
+        result = await db.execute(stmt)
+        question_count = result.scalar_one()
+
+        dto = ExamResponseDTO.from_orm(exam).model_dump()
+        dto["question_count"] = question_count
+        exam_list.append(dto)
+
     return ok(data={"exams": exam_list}, message="시험 리스트 조회 성공")
