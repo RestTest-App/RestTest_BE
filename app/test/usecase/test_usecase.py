@@ -3,7 +3,7 @@ from sqlalchemy.future import select
 from domain.test.entity.exam import Exam
 from domain.test.entity.question import Question
 from domain.user.entity.user import User
-from exception.success import ok
+from app.utils.dto.success import ok
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.test.dto.response.exam_response_dto import ExamResponseDTO
 from domain.test.repository.test_repository import TestRepository
