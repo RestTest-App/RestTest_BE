@@ -58,13 +58,20 @@ async def get_exam_list_by_certificate_id_usecase(certificate_id: int, db: Async
     exam_list = []
 
     for exam in exams:
-        # 각 시험에 대해 문제 수 계산
         stmt = select(func.count()).where(Question.exam_id == exam.id)
         result = await db.execute(stmt)
         question_count = result.scalar_one()
 
-        dto = ExamResponseDTO.from_orm(exam).model_dump()
-        dto["question_count"] = question_count
-        exam_list.append(dto)
+        dto = ExamResponseDTO(
+            id=exam.id,
+            name=exam.name,
+            year=exam.year,
+            month=exam.month,
+            trial=exam.trial,
+            time=exam.time,
+            pass_rate=exam.pass_rate,
+            question_count=question_count
+        )
+        exam_list.append(dto.model_dump())
 
     return ok(data={"exams": exam_list}, message="시험 리스트 조회 성공")
