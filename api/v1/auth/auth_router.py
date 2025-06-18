@@ -41,8 +41,7 @@ async def sign_up(request: SignUpRequest, db: AsyncSession = Depends(get_db)):
     print(info.values())
 
     user_dto = UserCreateDTO(
-        **request.model_dump(exclude={"kakao_token"}),
-        **info
+        **{**request.model_dump(exclude={"kakao_token"}), **info}
     )
 
     user = await SignUpUseCase(db).execute(user_dto)
