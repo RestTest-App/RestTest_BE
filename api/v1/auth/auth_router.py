@@ -45,7 +45,8 @@ async def sign_up(request: SignUpRequest, db: AsyncSession = Depends(get_db)):
     )
 
     user = await SignUpUseCase(db).execute(user_dto)
-    token_data = TokenUseCase.generate_tokens(user_id=user.id)
+    token_uc = TokenUseCase()
+    token_data = token_uc.generate_tokens(user_id=user.id)
 
     return created(data=token_data, message="회원가입 성공")
 
