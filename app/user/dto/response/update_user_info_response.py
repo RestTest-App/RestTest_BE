@@ -12,5 +12,5 @@ class UpdateUserInfoResponse(BaseModel):
     job: str
     rest_goal: Optional[int] = None
     test_goal: Optional[int] = None
-    goal_table: Optional[dict] = None  # JSON 형식
+    goal_table: Optional[list[int]] = None  # 목표 ID 리스트
     profile_image: Optional[str] = None
