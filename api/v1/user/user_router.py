@@ -31,6 +31,31 @@ async def get_user_info(user=Depends(get_current_user)):
     return ok(data=payload, message="사용자 정보 조회 성공")
 
 
+# 테스트용 사용자 정보 조회 (user_id로 직접 조회)
+@router.get("/get-user-info-test/{user_id}", response_model=GetUserInfoResponse)
+async def get_user_info_test(user_id: int, db: AsyncSession = Depends(get_db)):
+    """
+    테스트용 사용자 정보 조회 API
+
+    user_id를 직접 전달하여 사용자 정보를 조회합니다.
+    인���이 필요하지 않습니다.
+    """
+    from domain.auth.service.auth_service import AuthService
+
+    user = await AuthService.get_user_by_id(db, user_id)
+
+    if not user:
+        raise ForbiddenException(message="사용자를 찾을 수 없습니다.")
+
+    user_dict = user.__dict__.copy()
+    if isinstance(user_dict.get("monthly_study_date"), dict):
+        user_dict["monthly_study_date"] = None
+
+    user_info = GetUserInfoResponse.model_validate(user_dict)
+    payload: dict = user_info.model_dump(mode="json")
+    return ok(data=payload, message="사용자 정보 조회 성공")
+
+
 # 사용자 프로필 수정 (닉네임, 프로필 이미지)
 @router.patch("/update-user-profile", response_model=UpdateUserInfoResponse)
 async def update_user_profile(
