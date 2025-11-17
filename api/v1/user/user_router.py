@@ -32,7 +32,7 @@ async def get_user_info(user=Depends(get_current_user)):
 
 
 # 테스트용 사용자 정보 조회 (user_id로 직접 조회)
-@router.get("/get-user-info-test/{user_id}", response_model=GetUserInfoResponse)
+@router.get("/get-user-info-test/{user_id}")
 async def get_user_info_test(user_id: int, db: AsyncSession = Depends(get_db)):
     """
     테스트용 사용자 정보 조회 API
@@ -48,12 +48,23 @@ async def get_user_info_test(user_id: int, db: AsyncSession = Depends(get_db)):
         raise ForbiddenException(message="사용자를 찾을 수 없습니다.")
 
     user_dict = user.__dict__.copy()
+
+    # SQLAlchemy 내부 속성 제거
+    user_dict.pop('_sa_instance_state', None)
+
+    # birthday를 문자열로 변환 (date 객체는 JSON 직렬화 불가)
+    if user_dict.get("birthday"):
+        user_dict["birthday"] = user_dict["birthday"].isoformat()
+
+    # created_at를 문자열로 변환
+    if user_dict.get("created_at"):
+        user_dict["created_at"] = user_dict["created_at"].isoformat()
+
+    # monthly_study_date가 dict이면 None으로 설정
     if isinstance(user_dict.get("monthly_study_date"), dict):
         user_dict["monthly_study_date"] = None
 
-    user_info = GetUserInfoResponse.model_validate(user_dict)
-    payload: dict = user_info.model_dump(mode="json")
-    return ok(data=payload, message="사용자 정보 조회 성공")
+    return ok(data=user_dict, message="사용자 정보 조회 성공")
 
 
 # 사용자 프로필 수정 (닉네임, 프로필 이미지)
