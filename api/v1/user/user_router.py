@@ -100,9 +100,9 @@ async def update_user_profile(
 # 사용자 정보 수정 (모든 필드)
 @router.patch("/update-user-info")
 async def update_user_info(
+    request: UpdateUserInfoRequest,
     user=Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
-    request: UpdateUserInfoRequest
+    db: AsyncSession = Depends(get_db)
 ):
     """
     사용자 정보 수정 API (JSON Body)
