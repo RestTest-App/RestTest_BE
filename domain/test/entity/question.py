@@ -13,6 +13,7 @@ class Question(Base):
     description_image = Column(String(255), nullable=True, comment="문제 참고 이미지")
     options = Column(JSON, nullable=False, comment="문제 보기")
     answer = Column(Integer, nullable=False, comment="정답")
-    option_explanations = Column(JSON, nullable=False, comment="보기 별 해설")
+    explanations = Column(Text, nullable=True, comment="전체 해설") 
+    option_explanations = Column(JSON, nullable=True, comment="보기 별 해설")
     exam_id = Column(BigInteger, ForeignKey("exam.id"), nullable=False, comment="시험 ID")
     exam_section_id = Column(BigInteger, ForeignKey("exam_section.id"), nullable=False, comment="과목 고유 식별값")

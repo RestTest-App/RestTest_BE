@@ -10,7 +10,10 @@ import os
 from dotenv import load_dotenv
 from urllib.parse import quote_plus
 
-load_dotenv(".env.prod")
+# MODE 환경변수에 따라 .env 파일 선택
+mode = os.getenv("MODE", "prod")
+env_file = f".env.{mode}"
+load_dotenv(env_file)
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -19,11 +22,11 @@ config.file_config = configparser.ConfigParser(interpolation=None)
 
 DB_USER = os.getenv("DB_USER")
 DB_PASSWORD = quote_plus(os.getenv("DB_PASSWORD"))
-DB_URL = os.getenv("DB_URL")
+DB_HOST = os.getenv("DB_HOST") or os.getenv("DB_URL")  # dev는 DB_HOST, prod는 DB_URL 사용
 DB_PORT = os.getenv("DB_PORT")
 DB_NAME = os.getenv("DB_NAME")
 
-FULL_DB_URL = f"mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_URL}:{DB_PORT}/{DB_NAME}"
+FULL_DB_URL = f"mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
 
 config.set_main_option("sqlalchemy.url", FULL_DB_URL)
 

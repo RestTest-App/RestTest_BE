@@ -1,8 +1,6 @@
 from sqlalchemy import Column, BigInteger, String, Boolean, DateTime, Integer, JSON
-from sqlalchemy.dialects.mysql import SET
 from sqlalchemy.orm import relationship
 from database.base import Base
-from sqlalchemy.dialects.mysql import JSON
 
 class User(Base):
     __tablename__ = "user"
@@ -27,6 +25,9 @@ class User(Base):
         nullable=True,  # nullable=True 로 변경
         default=dict,  # 빈 dict {} 를 기본값으로 사용 (driver 파싱 안정적)
         comment="학습한 날짜"
-    )
+    ) # set null 허용안되서 json으로 바꿔서 사용
     is_study_today = Column(Boolean, nullable=False, default=False, comment="오늘 학습 여부")
     user_today_tests = relationship("UserTodayTest", back_populates="user", cascade="all, delete-orphan")
+    goal_table = Column(JSON,
+                    nullable=True,
+                    comment="목표 테이블")

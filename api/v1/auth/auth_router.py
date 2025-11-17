@@ -100,10 +100,10 @@ async def refresh_token(
 # test api
 @router.post("/sign-up-test", response_model=SignUpResponse)
 async def sign_up_test(request: SignUpRequest, db: AsyncSession = Depends(get_db)):
-    info = await KakaoAuthService().fetch_user_into_test(code=request.code)
+    info = await KakaoAuthService().fetch_user_into_test(kakao_token=request.kakao_token)
 
     # 카카오 인가 코드 추가
-    data = request.model_dump(exclude={"code"})
+    data = request.model_dump(exclude={"kakao_token"})
     data.update(info)
 
     dto = UserCreateDTO(**data)
@@ -111,9 +111,8 @@ async def sign_up_test(request: SignUpRequest, db: AsyncSession = Depends(get_db
     user = await usecase.execute(dto)
 
     # token 발급
-    payload = {"sub" : str(user.id)}
-    access_token = jwt_service.create_access_token(payload)
-    refresh_token = jwt_service.create_refresh_token(payload)
+    access_token = jwt_service.create_access_token(user.id)
+    refresh_token, jti = jwt_service.create_refresh_token(user.id)
 
     token_data = {
         "access_token" : access_token,
@@ -125,14 +124,13 @@ async def sign_up_test(request: SignUpRequest, db: AsyncSession = Depends(get_db
 
 
 @router.post("/sign-in-test", response_model=SignInResponse)
-async def sign_in(request: SignInRequest, db: AsyncSession = Depends(get_db)):
+async def sign_in_test(request: SignInRequest, db: AsyncSession = Depends(get_db)):
 
     usecase = SignInUseCase(db)
-    user = await usecase.execute_test(request.code)
+    user = await usecase.execute_test(request.kakao_token)
 
-    payload = {"sub": str(user.id)}
-    access_token = jwt_service.create_access_token(payload)
-    refresh_token = jwt_service.create_refresh_token(payload)
+    access_token = jwt_service.create_access_token(user.id)
+    refresh_token, jti = jwt_service.create_refresh_token(user.id)
 
     token_data = {
         "access_token" : access_token,
