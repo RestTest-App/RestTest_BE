@@ -10,6 +10,7 @@ from app.user.dto.response.update_user_info_response import UpdateUserInfoRespon
 from app.user.usecase.update_user_profile_usecase import UpdateUserProfileUseCase
 from app.user.usecase.update_user_info_usecase import UpdateUserInfoUseCase
 from app.utils.dto.success import ok
+from app.goal.service.goal_service import GoalService
 from domain.auth.service.jwt_service import JWTService
 from exception.client_exception import BadRequestException, ForbiddenException
 
@@ -200,6 +201,74 @@ async def update_user_info(
         # 커스텀 검증 오류
         raise BadRequestException(message=str(e))
     except ForbiddenException:
+        raise
+    except Exception as e:
+        raise
+
+
+# 사용자 목표 진행도 조회
+@router.get("/goals/progress")
+async def get_goals_progress(user=Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+    """
+    사용자의 오늘 목표 진행도 조회 API
+
+    사용자가 설정한 모든 목표의 오늘 진행 상황을 조회합니다.
+
+    Returns:
+        {
+            "code": 200,
+            "message": "목표 진행도 조회 성공",
+            "data": {
+                "today_date": "2025-11-17",
+                "total_goals": 3,
+                "achieved_goals": 2,
+                "overall_progress": 66.7,
+                "goals": [...]
+            }
+        }
+    """
+    try:
+        goals_progress = await GoalService.get_all_goals_progress(db, user.id)
+        return ok(data=goals_progress, message="목표 진행도 조회 성공")
+    except Exception as e:
+        raise
+
+
+# 개별 목표 진행도 조회
+@router.get("/goals/progress/{goal_id}")
+async def get_goal_progress(goal_id: int, user=Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+    """
+    개별 목표 진행도 조회 API
+
+    특정 목표의 오늘 진행 상황을 조회합니다.
+
+    Args:
+        goal_id: 목표 ID (1-9)
+
+    Returns:
+        {
+            "code": 200,
+            "message": "목표 진행도 조회 성공",
+            "data": {
+                "goal_id": 1,
+                "goal_name": "하루에 10문제",
+                "goal_type": "daily_problem",
+                "target_value": 10,
+                "current_progress": 7,
+                "progress_percent": 70.0,
+                "is_achieved": false
+            }
+        }
+    """
+    try:
+        goal_progress = await GoalService.get_goal_progress(db, user.id, goal_id)
+
+        # 목표가 없을 경우
+        if "error" in goal_progress:
+            raise BadRequestException(message=goal_progress["error"])
+
+        return ok(data=goal_progress, message="목표 진행도 조회 성공")
+    except BadRequestException:
         raise
     except Exception as e:
         raise

@@ -6,10 +6,10 @@ services:
     env_file:
       - .env.dev
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      MYSQL_DATABASE: ${DB_NAME}
-      MYSQL_USER: ${DB_USER}
-      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: 1234
+      MYSQL_DATABASE: resttest_mysql
+      MYSQL_USER: resttest_official
+      MYSQL_PASSWORD: resttest!@#20250331
     ports:
       - "3307:3306"
     volumes:
