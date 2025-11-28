@@ -13,7 +13,7 @@ MODE = os.getenv("MODE", "dev")
 if MODE == "dev":
     load_dotenv(".env.dev")
 elif MODE == "prod":
-    load_dotenv(".env.prod")
+    load_dotenv(".env")
 
 _api_key = os.getenv("OPENAI_API_KEY")
 if not _api_key:
