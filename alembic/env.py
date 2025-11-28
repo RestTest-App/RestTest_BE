@@ -35,6 +35,12 @@ fileConfig(config.config_file_name)
 
 # 실제 SQLAlchemy Base import
 from database.base import Base
+
+import domain.user.entity
+import domain.test.entity
+import domain.review.entity
+import domain.studybook.entity
+
 target_metadata = Base.metadata
 
 
