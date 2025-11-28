@@ -19,11 +19,11 @@ config.file_config = configparser.ConfigParser(interpolation=None)
 
 DB_USER = os.getenv("DB_USER")
 DB_PASSWORD = quote_plus(os.getenv("DB_PASSWORD"))
-DB_URL = os.getenv("DB_URL")
+DB_HOST = os.getenv("DB_HOST")
 DB_PORT = os.getenv("DB_PORT")
 DB_NAME = os.getenv("DB_NAME")
 
-FULL_DB_URL = f"mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_URL}:{DB_PORT}/{DB_NAME}"
+FULL_DB_URL = f"mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
 
 config.set_main_option("sqlalchemy.url", FULL_DB_URL)
 
@@ -32,6 +32,12 @@ fileConfig(config.config_file_name)
 
 # 실제 SQLAlchemy Base import
 from database.base import Base
+
+import domain.user.entity
+import domain.test.entity
+import domain.review.entity
+import domain.studybook.entity
+
 target_metadata = Base.metadata
 
 
