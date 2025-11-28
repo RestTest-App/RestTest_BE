@@ -107,3 +107,6 @@ venv.bak/
 .mypy_cache/
 
 .idea/*
+
+# Temporary files for OCR processing
+app/app/utils/tmp/
