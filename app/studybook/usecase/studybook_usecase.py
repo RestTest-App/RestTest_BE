@@ -55,7 +55,7 @@ logger = logging.getLogger(__name__)
 #         }
 #     ]
 
-async def upload_my_studybook_by_pdf_usecase(file: UploadFile, current_user: User, db: AsyncSession):
+async def upload_my_studybook_by_pdf_usecase(file: UploadFile, current_user: User, db: AsyncSession, answer_list: list = None, question_count: int = None):
     try:
         file_ext = Path(file.filename).suffix.lower()
         if file_ext != ".pdf":
@@ -75,7 +75,7 @@ async def upload_my_studybook_by_pdf_usecase(file: UploadFile, current_user: Use
         if hasattr(file, 'size') and file.size and file.size > 100 * 1024 * 1024:
             raise RequestEntityTooLargeException("최대 업로드 용량을 초과했습니다.")
 
-        ocr_result = gpt_ocr_process(file)
+        ocr_result = gpt_ocr_process(file, expected_question_count=question_count)
         if not ocr_result:
             raise UnprocessableEntityException("PDF를 분석할 수 없습니다.")
 
@@ -89,15 +89,18 @@ async def upload_my_studybook_by_pdf_usecase(file: UploadFile, current_user: Use
         db.add(new_book)
         await db.flush()
 
-        for item in ocr_result:
+        for idx, item in enumerate(ocr_result):
+            # answer_list가 있으면 해당 인덱스의 답을 사용, 없으면 OCR 결과 사용
+            answer = answer_list[idx] if answer_list and idx < len(answer_list) else item.get("answer", 1)
             question = StudyBookQuestion(
                 study_book_id=new_book.id,
                 description=item["description"],
                 description_detail=None,
                 description_image=None,
                 options=item["options"],
-                answer=item["answer"],
+                answer=answer,
                 option_explanations=None,
+                explanation=item.get("explanation"),
             )
             db.add(question)
 
@@ -120,7 +123,7 @@ async def upload_my_studybook_by_pdf_usecase(file: UploadFile, current_user: Use
         logger.error(traceback.format_exc())
         raise InternalServerErrorException("PDF 문제집 생성 중 서버 오류가 발생했습니다.")
 
-async def upload_my_studybook_by_img_usecase(file: UploadFile, current_user: User, db: AsyncSession):
+async def upload_my_studybook_by_img_usecase(file: UploadFile, current_user: User, db: AsyncSession, answer_list: list = None):
     try:
         file_ext = Path(file.filename).suffix.lower()
         if file_ext not in [".jpg", ".jpeg", ".png"]:
@@ -152,15 +155,17 @@ async def upload_my_studybook_by_img_usecase(file: UploadFile, current_user: Use
         db.add(new_book)
         await db.flush()
 
-        for item in ocr_result:
+        for idx, item in enumerate(ocr_result):
+            # answer_list가 있으면 해당 인덱스의 답을 사용, 없으면 OCR 결과 사용
+            answer = answer_list[idx] if answer_list and idx < len(answer_list) else item.get("answer", 1)
             question = StudyBookQuestion(
                 study_book_id=new_book.id,
                 description=item["description"],
                 description_detail=None,
                 description_image=None,
                 options=item["options"],
-                answer=item["answer"],
-                explanation=None,
+                answer=answer,
+                explanation=item.get("explanation"),
                 option_explanations=None,
             )
             db.add(question)
@@ -289,6 +294,7 @@ async def upload_my_studybook_by_dummy_usecase(
             options=item["options"],
             answer=item["answer"],
             option_explanations=None,
+            explanation=item.get("explanation"),
         )
         db.add(question)
 
@@ -303,3 +309,65 @@ async def upload_my_studybook_by_dummy_usecase(
         ).dict(),
         message="문제집 생성 성공 (dummy)"
     )
+
+async def get_studybook_detail_usecase(studybook_id: int, current_user: User, db: AsyncSession):
+    """
+    문제집 상세 조회
+    """
+    try:
+        # 문제집 조회
+        result = await db.execute(
+            select(StudyBook).where(
+                StudyBook.id == studybook_id,
+                StudyBook.user_id == current_user.id
+            )
+        )
+        studybook = result.scalars().first()
+
+        if not studybook:
+            raise NotFoundException("문제집을 찾을 수 없습니다.")
+
+        # 문제들 조회
+        questions_result = await db.execute(
+            select(StudyBookQuestion).where(
+                StudyBookQuestion.study_book_id == studybook_id
+            ).order_by(StudyBookQuestion.id)
+        )
+        questions = questions_result.scalars().all()
+
+        # DTO 생성
+        from app.studybook.dto.response.studybook_detail_response_dto import (
+            StudybookDetailResponseDTO, StudybookDetailDTO, QuestionItemDTO
+        )
+
+        question_items = [
+            QuestionItemDTO(
+                id=q.id,
+                description=q.description,
+                options=q.options,
+                answer=q.answer,
+                explanation=q.explanation
+            )
+            for q in questions
+        ]
+
+        detail_dto = StudybookDetailDTO(
+            id=studybook.id,
+            name=studybook.name,
+            question_count=studybook.question_count,
+            file_color=studybook.file_color,
+            questions=question_items
+        )
+
+        logger.info(f"[SUCCESS] get_studybook_detail_usecase - user_id: {current_user.id}, studybook_id: {studybook_id}")
+
+        return ok(
+            data=detail_dto.dict(),
+            message=f"문제집 상세 조회 성공"
+        )
+
+    except NotFoundException:
+        raise
+    except Exception as e:
+        logger.error(f"[ERROR] get_studybook_detail_usecase - {str(e)}")
+        raise InternalServerErrorException(f"문제집 조회 중 오류 발생: {str(e)}")

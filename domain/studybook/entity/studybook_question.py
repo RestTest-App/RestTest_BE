@@ -14,3 +14,4 @@ class StudyBookQuestion(Base):
     options = Column(JSON, nullable=False, comment="문제 보기")
     answer = Column(Integer, nullable=False, comment="정답")
     option_explanations = Column(JSON, nullable=True, comment="보기 별 해설")
+    explanation = Column(Text, nullable=True, comment="문제 해설")
