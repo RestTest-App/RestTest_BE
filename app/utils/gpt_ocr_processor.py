@@ -456,20 +456,37 @@ def extract_text_from_pdf(pdf_path: str) -> str:
 def gpt_ocr_process(pdf_file, expected_question_count: int = None) -> list[dict]:
     reset_tmp_dir()
 
-    # UploadFile을 tmp PDF로 저장
-    tmp_pdf_path = os.path.join(TMP_DIR, "input.pdf")
-    try:
-        with open(tmp_pdf_path, "wb") as f:
-            f.write(pdf_file.file.read())
-    except Exception as e:
-        raise UnprocessableEntityException("PDF 임시 저장 실패: " + str(e))
+    # 파일 타입 확인
+    file_ext = pdf_file.filename.split(".")[-1].lower() if hasattr(pdf_file, 'filename') else ""
+    is_image = file_ext in ['jpg', 'jpeg', 'png']
 
-    # PDF를 페이지별 이미지로 변환
-    pages = save_pdf_pages(tmp_pdf_path)
+    if is_image:
+        # 이미지 파일 처리
+        tmp_image_path = os.path.join(TMP_DIR, f"input.{file_ext}")
+        try:
+            with open(tmp_image_path, "wb") as f:
+                f.write(pdf_file.file.read())
+        except Exception as e:
+            raise UnprocessableEntityException("이미지 임시 저장 실패: " + str(e))
+        pages = [tmp_image_path]
+    else:
+        # PDF 파일 처리
+        tmp_pdf_path = os.path.join(TMP_DIR, "input.pdf")
+        try:
+            with open(tmp_pdf_path, "wb") as f:
+                f.write(pdf_file.file.read())
+        except Exception as e:
+            raise UnprocessableEntityException("PDF 임시 저장 실패: " + str(e))
 
-    # 1단계: PDF에서 직접 텍스트 추출 (빈칸 보존)
-    print(f"[DEBUG] 1단계: PDF 직접 추출 시작")
-    full_ocr_text = extract_text_from_pdf(tmp_pdf_path)
+        # PDF를 페이지별 이미지로 변환
+        pages = save_pdf_pages(tmp_pdf_path)
+        tmp_pdf_path = os.path.join(TMP_DIR, "input.pdf")
+
+    # 1단계: PDF에서 직접 텍스트 추출 (빈칸 보존) - 이미지 파일이 아닐 때만
+    full_ocr_text = ""
+    if not is_image:
+        print(f"[DEBUG] 1단계: PDF 직접 추출 시작")
+        full_ocr_text = extract_text_from_pdf(tmp_pdf_path)
 
     # 2단계: PDF 직접 추출이 실패했거나 부족하면 Naver OCR 사용
     if not full_ocr_text or len(full_ocr_text) < 500:
@@ -479,12 +496,15 @@ def gpt_ocr_process(pdf_file, expected_question_count: int = None) -> list[dict]
 
         for page_num, page_path in enumerate(pages, start=1):
             try:
-                # 페이지를 좌우로 분할
-                split_paths = crop_and_split_image(page_path)
-                print(f"[DEBUG] Page {page_num} split into 2 halves")
+                # 이미지 파일은 분할하지 않음, PDF는 분할
+                if is_image:
+                    split_paths = [page_path]
+                else:
+                    split_paths = crop_and_split_image(page_path)
+                    print(f"[DEBUG] Page {page_num} split into 2 halves")
 
                 for half_idx, half_path in enumerate(split_paths):
-                    position = "좌측" if half_idx == 0 else "우측"
+                    position = "전체" if is_image else ("좌측" if half_idx == 0 else "우측")
                     try:
                         print(f"[DEBUG] Page {page_num}-{position}: Naver OCR 처리")
                         ocr_result = naver_ocr_image(half_path)
@@ -496,7 +516,7 @@ def gpt_ocr_process(pdf_file, expected_question_count: int = None) -> list[dict]
                         print(f"[DEBUG] Error processing page {page_num}-{position}: {e}")
                         continue
             except Exception as e:
-                print(f"[DEBUG] Error splitting page {page_num}: {e}")
+                print(f"[DEBUG] Error processing page {page_num}: {e}")
                 try:
                     ocr_result = naver_ocr_image(page_path)
                     if ocr_result:
