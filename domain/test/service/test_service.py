@@ -35,10 +35,17 @@ class TestService:
             if is_correct:
                 correct_count += 1
 
+            raw_list = question.option_explanations or []
+            option_explanations_dict: dict[str, str] = {
+                key: val
+                for item in raw_list
+                for key, val in item.items()
+            }
+
             # 문제별 해설 DTO
             info_list.append(AnswerInfoDto(
                 answer=question.answer,
-                option_explanations=question.option_explanations
+                option_explanations=option_explanations_dict
             ))
 
             # 문제별 사용자 응답 기록

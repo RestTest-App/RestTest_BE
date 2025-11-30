@@ -41,6 +41,7 @@ from app.test.usecase.dummy_data_usecase import reset_dummy_data_usecase
 from app.test.dto.request.create_dummy_data_request import CreateDummyDataRequest
 #시험모드 문제 리스트 출력
 from app.test.dto.response.get_certificates_exam_list_response import GetCertificatesExamListResponse
+from app.test.usecase.test_usecase import get_exam_list_by_certificate_id_usecase
 from app.test.usecase.exam_usecase import get_certificates_exam_list_usecase
 from app.test.usecase.exam_usecase import create_exam_usecase
 from app.test.usecase.exam_usecase import get_exam_info_usecase
@@ -170,6 +171,10 @@ async def get_questions_by_exam_id(
 ):
     result = await get_questions_by_exam_id_usecase(exam_id, db)
     return ok(data=[item.dict() for item in result], message="문제 목록 조회 성공")
+
+@router.get("/list/{certificate_id}")
+async def get_exam_list(certificate_id: int = Path(...), db: AsyncSession = Depends(get_db)):
+    return await get_exam_list_by_certificate_id_usecase(certificate_id, db)
 
 @router.post("/dummy-data", summary="유형별 Dummy Data 생성 API")
 async def create_dummy_data(

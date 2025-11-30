@@ -55,6 +55,15 @@ jobs:
         cache-from: type=local,src=/tmp/.buildx-cache
         cache-to: type=local,dest=/tmp/.buildx-cache-new
 
+    - name: Copy Docker Compose file via SCP
+      uses: appleboy/scp-action@v0.1.7
+      with:
+        host: ${{ secrets.GCE_HOST }}
+        username: ${{ secrets.GCE_SSH_USER }}
+        key: ${{ secrets.GCE_SSH_KEY }}
+        source: "docker-compose.prod.yml"
+        target: "~/app-path"
+
     - name: Deploy to GCE via SSH
       uses: appleboy/ssh-action@v1.0.0
       with:
@@ -62,6 +71,7 @@ jobs:
         username: ${{ secrets.GCE_SSH_USER }}
         key: ${{ secrets.GCE_SSH_KEY }}
         script: |
+          mkdir -p ~/app-path
           cd ~/app-path
 
           cat << 'EOF' > .env
@@ -70,7 +80,9 @@ jobs:
 
           gcloud auth configure-docker ${{ env.ARTIFACT_REGISTRY }} --quiet
 
-          docker-compose -f docker-compose.prod.yml down
-          docker-compose -f docker-compose.prod.yml pull
-          docker-compose -f docker-compose.prod.yml run --rm -e MODE=prod fastapi alembic upgrade head
-          docker-compose -f docker-compose.prod.yml up -d
+          docker compose -f docker-compose.prod.yml down
+          docker compose -f docker-compose.prod.yml pull
+          
+          docker compose -f docker-compose.prod.yml run --rm -e MODE=prod fastapi alembic upgrade head
+          
+          docker compose -f docker-compose.prod.yml up -d
