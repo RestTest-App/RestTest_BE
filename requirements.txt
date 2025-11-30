@@ -1,4 +1,4 @@
-fastapi==0.121.3
+fastapi==0.115.6
 uvicorn==0.34.0
 
 # db 관련
@@ -21,7 +21,6 @@ boto3~=1.38.32
 python-jose[cryptography]~=3.5.0
 requests-oauthlib
 requests~=2.32.3
-
 
 # test
 pytest
