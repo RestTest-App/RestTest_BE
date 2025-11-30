@@ -5,6 +5,7 @@ from .test_tracker import TestTracker
 from .today_test import TodayTest
 from .today_test_question import TodayTestQuestion
 from .user_question_tracker import UserQuestionTracker
+from .user_today_test import UserTodayTest
 
 __all__ = [
     "Exam",
@@ -14,4 +15,5 @@ __all__ = [
     "TodayTest",
     "TodayTestQuestion",
     "UserQuestionTracker",
+    "UserTodayTest"
 ]

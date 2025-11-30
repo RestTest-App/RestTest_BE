@@ -2,7 +2,7 @@ version: "3.9"
 
 services:
   redis:
-    image: redis:7
+    image: redis:alpine
     container_name: redis-prod
     ports:
       - "6379:6379"
@@ -18,7 +18,7 @@ services:
 
     command: uvicorn main:app --host 0.0.0.0 --port 8080
     ports:
-      - "8080:8080"
+      - "80:8080"
 
     env_file:
       - .env
