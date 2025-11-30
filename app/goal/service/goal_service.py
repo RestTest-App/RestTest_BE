@@ -121,8 +121,8 @@ class GoalService:
                 "error": "사용자를 찾을 수 없습니다"
             }
 
-        goal_ids = user.goal_table
-        if not goal_ids:
+        goal_table = user.goal_table
+        if not goal_table:
             return {
                 "today_date": datetime.now().date().isoformat(),
                 "total_goals": 0,
@@ -131,11 +131,15 @@ class GoalService:
                 "goals": []
             }
 
-        # 2. 각 목표별 진행도 계산
+        # 2. 각 목표별 진행도 계산 (goal_table은 dict 형식)
         goals_progress = []
-        for goal_id in goal_ids:
-            goal_progress = await GoalService.get_goal_progress(
-                db, user_id, goal_id
+        for category, target_value in goal_table.items():
+            # null 또는 None 값은 건너뜀
+            if target_value is None:
+                continue
+
+            goal_progress = await GoalService._get_goal_progress_by_category(
+                db, user_id, category, target_value
             )
             goals_progress.append(goal_progress)
 
@@ -150,6 +154,73 @@ class GoalService:
             "achieved_goals": achieved_count,
             "overall_progress": round(overall_progress, 1),
             "goals": goals_progress
+        }
+
+    @staticmethod
+    async def _get_goal_progress_by_category(
+        db: AsyncSession,
+        user_id: int,
+        category: str,
+        target_value: int
+    ) -> dict:
+        """
+        카테고리와 목표값을 기반으로 진행도를 계산합니다.
+
+        Args:
+            db: AsyncSession
+            user_id: 사용자 ID
+            category: 목표 카테고리 (daily_problem, daily_accuracy, consecutive_days)
+            target_value: 목표값
+
+        Returns:
+            {
+                "category": str,
+                "goal_name": str,
+                "target_value": int,
+                "current_progress": int or float,
+                "progress_percent": float,
+                "is_achieved": bool
+            }
+        """
+        today = datetime.now().date()
+
+        if category == "daily_problem":
+            current_progress = await GoalService._get_daily_problem_count(
+                db, user_id, today
+            )
+            progress_percent = min((current_progress / target_value) * 100, 100)
+            is_achieved = current_progress >= target_value
+            goal_name = f"하루에 {target_value}문제"
+
+        elif category == "daily_accuracy":
+            current_progress, _ = await GoalService._get_daily_accuracy(
+                db, user_id, today
+            )
+            progress_percent = min((current_progress / target_value) * 100, 100) if current_progress > 0 else 0
+            is_achieved = current_progress >= target_value
+            goal_name = f"정답률 {target_value}% 이상"
+
+        elif category == "consecutive_days":
+            current_progress = await GoalService._get_consecutive_study_days(
+                db, user_id
+            )
+            progress_percent = min((current_progress / target_value) * 100, 100)
+            is_achieved = current_progress >= target_value
+            goal_name = f"연속 {target_value}일 학습"
+
+        else:
+            return {
+                "category": category,
+                "error": "지원하지 않는 목표 카테고리입니다"
+            }
+
+        return {
+            "category": category,
+            "goal_name": goal_name,
+            "target_value": target_value,
+            "current_progress": current_progress,
+            "progress_percent": round(progress_percent, 1),
+            "is_achieved": is_achieved
         }
 
     @staticmethod

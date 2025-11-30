@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field, field_validator
-from typing import Optional
+from typing import Optional, Dict
 from datetime import datetime
 import re
 
@@ -13,7 +13,7 @@ class UpdateUserInfoRequest(BaseModel):
     job: Optional[str] = Field(None, max_length=100, description="직업")
     rest_goal: Optional[int] = Field(None, ge=0, description="쉬엄모드 목표")
     test_goal: Optional[int] = Field(None, ge=0, description="시험모드 목표")
-    goal_table: Optional[list[int]] = Field(None, description="목표 테이블 (목표 번호 리스트)")
+    goal_table: Optional[Dict[str, Optional[int]]] = Field(None, description="목표 테이블 {daily_problem, daily_accuracy, consecutive_days}")
 
     @field_validator('nickname')
     @classmethod
@@ -54,16 +54,24 @@ class UpdateUserInfoRequest(BaseModel):
 
     @field_validator('goal_table')
     @classmethod
-    def validate_goal_table(cls, v: Optional[list[int]]) -> Optional[list[int]]:
+    def validate_goal_table(cls, v: Optional[Dict[str, Optional[int]]]) -> Optional[Dict[str, Optional[int]]]:
         if v is None:
             return v
 
-        # goal_table은 1-7 범위의 정수 리스트
-        if not isinstance(v, list):
-            raise ValueError('goal_table은 리스트 형식이어야 합니다.')
+        # goal_table은 dict 형식
+        if not isinstance(v, dict):
+            raise ValueError('goal_table은 dict 형식이어야 합니다.')
 
-        for goal_id in v:
-            if not isinstance(goal_id, int) or goal_id < 1 or goal_id > 7:
-                raise ValueError('goal_table의 값은 1-7 범위의 정수여야 합니다.')
+        # 허용되는 카테고리
+        allowed_categories = {'daily_problem', 'daily_accuracy', 'consecutive_days'}
+
+        for category, value in v.items():
+            if category not in allowed_categories:
+                raise ValueError(f'목표 카테고리는 {allowed_categories} 중 하나여야 합니다.')
+
+            # 값이 None이거나 0 이상의 정수여야 함
+            if value is not None:
+                if not isinstance(value, int) or value <= 0:
+                    raise ValueError(f'{category}의 값은 양의 정수이거나 null이어야 합니다.')
 
         return v
