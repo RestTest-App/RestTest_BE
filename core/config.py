@@ -9,7 +9,7 @@ class JwtSetting(BaseSettings):
     JWT_REFRESH_TOKEN_EXPIRE_DAYS: int = 0 # refresh token 만료 일
 
     class Config:
-        env_file = ".env.dev"
+        env_file = ".env"
         env_file_encoding = "utf-8"
         extra = "ignore"
 
@@ -24,7 +24,7 @@ class KakaoSettings(BaseSettings):
     KAKAO_PROFILE_URL: str = ""
 
     class Config:
-        env_file = ".env.dev"
+        env_file = ".env"
         env_file_encoding = "utf-8"
         extra = "ignore"
 
@@ -36,7 +36,7 @@ class GPTSetting(BaseSettings):
     NAVER_SECRET_KEY: str = ""
 
     class Config:
-        env_file = ".env.dev"
+        env_file = ".env"
         env_file_encoding = "utf-8"
         extra = "ignore"
 
@@ -49,7 +49,7 @@ class AWSSettings(BaseSettings):
     AWS_STORAGE_BUCKET_NAME: str = ""
 
     class Config:
-        env_file = ".env.dev"
+        env_file = ".env"
         env_file_encoding = "utf-8"
         extra = "ignore"
 
@@ -60,7 +60,7 @@ class RedisSettings(BaseSettings):
     REDIS_PORT: int
 
     class Config:
-        env_file = ".env.dev"
+        env_file = ".env"
         env_file_encoding = "utf-8"
         extra = "ignore"
 
