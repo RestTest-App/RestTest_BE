@@ -10,12 +10,20 @@ from sqlalchemy.orm import Session
 from app.studybook.dto.response.upload_studybook_response_dto import UploadStudybookResponseDTO
 from app.studybook.dto.response.my_studybook_response_dto import MyStudybookResponseDTO
 from app.studybook.dto.response.delete_studybook_response_dto import DeleteStudybookResponseDTO
-from app.studybook.usecase.studybook_usecase import upload_my_studybook_by_img_usecase
+from app.studybook.dto.response.studybook_detail_response_dto import StudybookDetailResponseDTO
+from app.studybook.usecase.studybook_usecase import (
+    upload_my_studybook_by_img_usecase,
+    upload_my_studybook_usecase
+)
 
 from domain.user.entity.user import User
 from database.dependency import get_db
-from app.studybook.usecase.studybook_usecase import upload_my_studybook_by_pdf_usecase, get_my_studybooks_usecase
-from app.studybook.usecase.studybook_usecase import delete_my_studybook_usecase
+from app.studybook.usecase.studybook_usecase import (
+    upload_my_studybook_by_pdf_usecase,
+    get_my_studybooks_usecase,
+    get_studybook_detail_usecase,
+    delete_my_studybook_usecase
+)
 from app.utils.dummy_questions import dummy_questions
 from app.studybook.usecase.studybook_usecase import upload_my_studybook_by_dummy_usecase
 
@@ -52,29 +60,85 @@ async def upload_my_studybook_by_dummy(
     return await upload_my_studybook_by_dummy_usecase(studybook_name, dummy_questions, current_user, db)
 
 
+@router.post("/upload-my-studybook", response_model=UploadStudybookResponseDTO)
+async def upload_my_studybook(
+    files: list[UploadFile] = File(...),
+    answers: str = None,
+    question_count: int = None,
+    *,
+    current_user: Annotated[User, Depends(get_current_user)],
+    db: Annotated[Session, Depends(get_db)]
+):
+    """
+    통합 문제집 업로드 API (PDF 또는 이미지)
+
+    - PDF: 1개 파일만 업로드 가능
+    - 이미지: 여러 개 파일 업로드 가능
+
+    Query Parameters:
+        files: 업로드할 파일 (PDF 또는 이미지)
+        answers: JSON 형식의 정답 리스트 (선택사항)
+        question_count: 예상 문제 개수 (PDF 전용, 선택사항)
+    """
+    answer_list = None
+    if answers:
+        import json
+        try:
+            answer_list = json.loads(answers)
+        except:
+            answer_list = None
+    return await upload_my_studybook_usecase(files, current_user, db, answer_list, question_count)
+
+
 @router.post("/upload-my-studybook-by-pdf", response_model=UploadStudybookResponseDTO)
 async def upload_my_studybook_by_pdf(
     file: UploadFile = File(...),
+    answers: str = None,
+    question_count: int = None,
     *,
     current_user: Annotated[User, Depends(get_current_user)],
     db: Annotated[Session, Depends(get_db)]
 ):
-    return await upload_my_studybook_by_pdf_usecase(file, current_user,
-                                                    db)
+    # answers가 있으면 JSON 문자열로 파싱
+    answer_list = None
+    if answers:
+        import json
+        try:
+            answer_list = json.loads(answers)
+        except:
+            answer_list = None
+    return await upload_my_studybook_by_pdf_usecase(file, current_user, db, answer_list, question_count)
 @router.post("/upload-my-studybook-by-img", response_model=UploadStudybookResponseDTO)
 async def upload_my_studybook_by_img(
     file: UploadFile = File(...),
+    answers: str = None,
     *,
     current_user: Annotated[User, Depends(get_current_user)],
     db: Annotated[Session, Depends(get_db)]
 ):
-    return await upload_my_studybook_by_img_usecase(file, current_user, db)
+    # answers가 있으면 JSON 문자열로 파싱
+    answer_list = None
+    if answers:
+        import json
+        try:
+            answer_list = json.loads(answers)
+        except:
+            answer_list = None
+    return await upload_my_studybook_by_img_usecase(file, current_user, db, answer_list)
 @router.get("/my_studybook", response_model=MyStudybookResponseDTO)
 async def my_studybook(
     current_user: Annotated[User, Depends(get_current_user)],
     db: Annotated[Session, Depends(get_db)]
 ):
     return await get_my_studybooks_usecase(current_user, db)
+
+@router.get("/my_studybook/{studybook_id}", response_model=StudybookDetailResponseDTO)
+async def get_studybook_detail(
+    studybook_id: Annotated[int, Path()],
+    current_user: Annotated[User, Depends(get_current_user)],
+    db: Annotated[Session, Depends(get_db)]
+):
+    return await get_studybook_detail_usecase(studybook_id, current_user, db)
 
 @router.delete("/delete-my-studybook/{studybook_id}", response_model=DeleteStudybookResponseDTO)
 async def delete_my_studybook(

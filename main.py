@@ -1,5 +1,7 @@
 import uvicorn
 from fastapi import FastAPI, Depends
+from fastapi.staticfiles import StaticFiles
+from pathlib import Path
 from starlette.middleware.cors import CORSMiddleware
 from api.v1.routers import router as api_routers
 from database.init_db import init_db
@@ -15,6 +17,11 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# 정적 파일 서빙 (프로필 이미지)
+upload_dir = Path("uploads")
+upload_dir.mkdir(exist_ok=True)
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 app.include_router(api_routers)
 

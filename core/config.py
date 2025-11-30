@@ -29,9 +29,11 @@ class KakaoSettings(BaseSettings):
         extra = "ignore"
 
 
-# OPENAI
+# OPENAI & NAVER OCR
 class GPTSetting(BaseSettings):
     OPENAI_API_KEY: str = ""
+    NAVER_OCR_URL: str = ""
+    NAVER_SECRET_KEY: str = ""
 
     class Config:
         env_file = ".env"
