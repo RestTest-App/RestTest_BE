@@ -111,3 +111,6 @@ venv.bak/
 # Temporary files for OCR processing
 app/app/utils/tmp/
 .DS_Store
+
+# Uploaded files (profile images)
+uploads/
