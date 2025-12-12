@@ -31,3 +31,5 @@ class User(Base):
     goal_table = Column(JSON,
                     nullable=True,
                     comment="목표 테이블")
+    membership_tier = Column(String(20), nullable=False, default='FREE', comment="멤버십 등급 (FREE, PREMIUM)")
+    subscription_expire_date = Column(DateTime, nullable=True, comment="구독 만료일")
