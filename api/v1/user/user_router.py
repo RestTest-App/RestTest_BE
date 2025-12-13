@@ -3,6 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from pydantic import ValidationError
 
 from app.auth.dependency import get_current_user, get_db
+from domain.rate_limit.service.rate_limit_service import RateLimitService
 from app.user.dto.request.update_user_profile_request import UpdateUserProfileRequest
 from app.user.dto.request.update_user_info_request import UpdateUserInfoRequest
 from app.user.dto.response.get_user_info_response import GetUserInfoResponse
@@ -272,3 +273,54 @@ async def get_goal_progress(goal_id: int, user=Depends(get_current_user), db: As
         raise
     except Exception as e:
         raise
+
+
+# API 사용량 조회
+@router.get("/api-usage")
+async def get_api_usage(user=Depends(get_current_user)):
+    """
+    API 사용량 조회 API
+
+    사용자의 오늘 API 사용량 및 제한 정보를 조회합니다.
+
+    Returns:
+        {
+            "code": 200,
+            "message": "API 사용량 조회 성공",
+            "data": {
+                "tier": "FREE",
+                "limit": 5,
+                "used": 3,
+                "remaining": 2,
+                "reset_at": "2025-12-13 00:00:00"
+            }
+        }
+    """
+    rate_limiter = RateLimitService()
+
+    try:
+        # membership_tier가 없으면 기본값 'FREE' 사용
+        membership_tier = getattr(user, 'membership_tier', 'FREE')
+
+        limit_info = await rate_limiter.get_limit_info(
+            user_id=user.id,
+            membership_tier=membership_tier
+        )
+
+        # 다음 리셋 시간 (자정)
+        from datetime import datetime, timedelta
+        now = datetime.now()
+        midnight = (now + timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
+
+        result = {
+            "tier": limit_info["tier"],
+            "limit": limit_info["limit"],
+            "used": limit_info["used"],
+            "remaining": limit_info["remaining"],
+            "reset_at": midnight.isoformat()
+        }
+
+        return ok(data=result, message="API 사용량 조회 성공")
+
+    finally:
+        await rate_limiter.close()

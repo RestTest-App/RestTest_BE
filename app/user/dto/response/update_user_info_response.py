@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, Dict
 
 
 class UpdateUserInfoResponse(BaseModel):
@@ -12,5 +12,5 @@ class UpdateUserInfoResponse(BaseModel):
     job: str
     rest_goal: Optional[int] = None
     test_goal: Optional[int] = None
-    goal_table: Optional[list[int]] = None  # 목표 ID 리스트
+    goal_table: Optional[Dict[str, Optional[int]]] = None  # 목표 {daily_problem, daily_accuracy, consecutive_days}
     profile_image: Optional[str] = None
