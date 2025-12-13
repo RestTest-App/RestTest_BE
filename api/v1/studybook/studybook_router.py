@@ -1,6 +1,6 @@
 # api/v1/studybook/studybook_router.py
 
-from fastapi import APIRouter, UploadFile, File, Path, Depends
+from fastapi import APIRouter, UploadFile, File, Form, Path, Depends
 from typing import Annotated
 from datetime import datetime
 
@@ -27,7 +27,7 @@ from app.studybook.usecase.studybook_usecase import (
 from app.utils.dummy_questions import dummy_questions
 from app.studybook.usecase.studybook_usecase import upload_my_studybook_by_dummy_usecase
 
-from app.auth.dependency import get_current_user
+from app.auth.dependency import get_current_user, check_api_rate_limit
 router = APIRouter()
 #
 # def get_dummy_user() -> User:
@@ -63,11 +63,13 @@ async def upload_my_studybook_by_dummy(
 @router.post("/upload-my-studybook", response_model=UploadStudybookResponseDTO)
 async def upload_my_studybook(
     files: list[UploadFile] = File(...),
-    answers: str = None,
-    question_count: int = None,
+    copyright_agreed: bool = Form(...),  # 저작권 동의 필수
+    answers: str = Form(None),
+    question_count: int = Form(None),
     *,
     current_user: Annotated[User, Depends(get_current_user)],
-    db: Annotated[Session, Depends(get_db)]
+    db: Annotated[Session, Depends(get_db)],
+    _: Annotated[None, Depends(check_api_rate_limit)]  # Rate Limit 체크
 ):
     """
     통합 문제집 업로드 API (PDF 또는 이미지)
@@ -75,11 +77,20 @@ async def upload_my_studybook(
     - PDF: 1개 파일만 업로드 가능
     - 이미지: 여러 개 파일 업로드 가능
 
-    Query Parameters:
+    Form Data Parameters:
         files: 업로드할 파일 (PDF 또는 이미지)
+        copyright_agreed: 저작권 동의 여부 (필수, true 필요)
         answers: JSON 형식의 정답 리스트 (선택사항)
         question_count: 예상 문제 개수 (PDF 전용, 선택사항)
     """
+    from exception.client_exception import BadRequestException
+
+    # 저작권 동의 확인
+    if not copyright_agreed:
+        raise BadRequestException(
+            message="저작권 관련 법률을 준수하기 위해 동의가 필요합니다. 타인의 저작물을 무단으로 업로드하지 마세요."
+        )
+
     answer_list = None
     if answers:
         import json

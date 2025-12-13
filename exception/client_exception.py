@@ -51,3 +51,10 @@ class UnprocessableEntityException(CustomException):
 class TooManyRequestsException(CustomException):
     def __init__(self, detail: str = "Too Many Requests"):
         super().__init__(status.HTTP_429_TOO_MANY_REQUESTS, detail)
+
+# 429 Rate Limit Exceeded (API 사용량 제한 초과)
+class RateLimitExceededException(CustomException):
+    def __init__(self, detail: str = "Rate Limit Exceeded", message: str = None):
+        if message is None:
+            message = "일일 무료 사용 횟수를 초과했습니다. 프리미엄 구독을 이용해주세요."
+        super().__init__(status.HTTP_429_TOO_MANY_REQUESTS, detail, message)

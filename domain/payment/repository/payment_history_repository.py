@@ -20,9 +20,25 @@ class PaymentHistoryRepository:
             생성된 PaymentHistory
         """
         db.add(payment_history)
-        await db.commit()
-        await db.refresh(payment_history)
+        await db.flush()  # Service에서 commit 관리
         return payment_history
+
+    @staticmethod
+    async def get_by_id(db: AsyncSession, payment_id: int) -> Optional[PaymentHistory]:
+        """
+        ID로 결제 이력 조회
+
+        Args:
+            db: AsyncSession
+            payment_id: 결제 이력 ID
+
+        Returns:
+            PaymentHistory 또는 None
+        """
+        result = await db.execute(
+            select(PaymentHistory).where(PaymentHistory.id == payment_id)
+        )
+        return result.scalar_one_or_none()
 
     @staticmethod
     async def get_by_user_id(db: AsyncSession, user_id: int) -> List[PaymentHistory]:

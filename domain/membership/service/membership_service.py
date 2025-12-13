@@ -1,7 +1,9 @@
+"""
+Membership Service
+멤버십 관련 비즈니스 로직
+"""
 from datetime import datetime, timedelta
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import update, select
-
 from domain.user.entity.user import User
 from domain.payment.entity.payment_history import PaymentHistory
 from domain.payment.repository.payment_history_repository import PaymentHistoryRepository
@@ -19,11 +21,11 @@ class MembershipService:
         duration_days: int = 30
     ) -> dict:
         """
-        멤버십 업그레이드 (테스트용)
+        멤버십 업그레이드
 
         Args:
-            db: AsyncSession
-            user: User 객체
+            db: Database session
+            user: 사용자 객체
             membership_tier: 업그레이드할 멤버십 등급 (PREMIUM, FREE)
             payment_amount: 결제 금액 (원)
             duration_days: 구독 기간 (일)
@@ -36,43 +38,41 @@ class MembershipService:
                 "subscription_expire_date": datetime
             }
         """
-        previous_tier = user.membership_tier
-        start_date = datetime.now()
-        end_date = start_date + timedelta(days=duration_days)
+        previous_tier = getattr(user, 'membership_tier', 'FREE')
 
-        # User 멤버십 정보 업데이트
-        await db.execute(
-            update(User)
-            .where(User.id == user.id)
-            .values(
-                membership_tier=membership_tier,
-                subscription_expire_date=end_date if membership_tier != 'FREE' else None
-            )
-        )
+        # 구독 시작/종료일 설정
+        subscription_start = datetime.now()
+        subscription_end = subscription_start + timedelta(days=duration_days)
 
-        # 결제 이력 생성 (FREE가 아닐 경우)
+        # User 업데이트
+        user.membership_tier = membership_tier
+        user.subscription_expire_date = subscription_end if membership_tier != 'FREE' else None
+
+        # PaymentHistory 생성 (FREE가 아닐 경우)
         if membership_tier != 'FREE':
             payment_history = PaymentHistory(
                 user_id=user.id,
                 membership_tier=membership_tier,
                 payment_amount=payment_amount,
-                payment_method="TEST",
+                payment_method="TEST",  # 테스트용
                 payment_status="SUCCESS",
-                subscription_start_date=start_date,
-                subscription_end_date=end_date,
-                created_at=start_date,
-                transaction_id=f"TEST_{user.id}_{int(start_date.timestamp())}",
+                subscription_start_date=subscription_start,
+                subscription_end_date=subscription_end,
+                created_at=subscription_start,
+                transaction_id=f"TEST_{user.id}_{int(subscription_start.timestamp())}",
                 pg_provider="TEST"
             )
+
             await PaymentHistoryRepository.create(db, payment_history)
 
         await db.commit()
+        await db.refresh(user)
 
         return {
             "user_id": user.id,
             "previous_tier": previous_tier,
             "new_tier": membership_tier,
-            "subscription_expire_date": end_date if membership_tier != 'FREE' else None
+            "subscription_expire_date": subscription_end if membership_tier != 'FREE' else None
         }
 
     @staticmethod
@@ -81,43 +81,45 @@ class MembershipService:
         구독 상태 확인
 
         Args:
-            user: User 객체
+            user: 사용자 객체
 
         Returns:
             {
                 "is_active": bool,
                 "is_expired": bool,
-                "tier": str,
-                "expire_date": datetime or None
+                "expire_date": datetime | None
             }
         """
-        now = datetime.now()
-        is_expired = False
-        is_active = user.membership_tier != 'FREE'
+        membership_tier = getattr(user, 'membership_tier', 'FREE')
+        subscription_expire_date = getattr(user, 'subscription_expire_date', None)
 
-        # 구독 만료일이 있고, 현재 시간이 만료일을 넘었는지 확인
-        if user.subscription_expire_date and now > user.subscription_expire_date:
-            is_expired = True
-            is_active = False
+        if membership_tier == "FREE" or subscription_expire_date is None:
+            return {
+                "is_active": False,
+                "is_expired": False,
+                "expire_date": None
+            }
+
+        now = datetime.now()
+        is_expired = subscription_expire_date < now
 
         return {
-            "is_active": is_active,
+            "is_active": not is_expired,
             "is_expired": is_expired,
-            "tier": user.membership_tier,
-            "expire_date": user.subscription_expire_date
+            "expire_date": subscription_expire_date
         }
 
     @staticmethod
     async def get_payment_history(db: AsyncSession, user_id: int) -> list:
         """
-        사용자의 결제 이력 조회
+        결제 이력 조회
 
         Args:
-            db: AsyncSession
+            db: Database session
             user_id: 사용자 ID
 
         Returns:
-            결제 이력 리스트
+            List of payment history dicts
         """
         payment_histories = await PaymentHistoryRepository.get_by_user_id(db, user_id)
 

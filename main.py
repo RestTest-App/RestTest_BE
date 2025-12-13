@@ -8,7 +8,12 @@ from database.init_db import init_db
 
 from exception.base import CustomException
 from exception.exception_handler import custom_exception_handler
+from app.middleware.rate_limit_middleware import RateLimitMiddleware
+
 app = FastAPI()
+
+# Rate Limit Middleware 추가 (CORS보다 먼저)
+app.add_middleware(RateLimitMiddleware)
 
 app.add_middleware(
     CORSMiddleware,
