@@ -197,6 +197,7 @@ async def cancel_membership(
         "user_id": current_user.id,
         "membership_tier": membership_tier,
         "subscription_expire_date": subscription_expire_date.isoformat() if subscription_expire_date else None,
+        "is_active": subscription_status["is_active"],
         "days_remaining": days_remaining,
         "message": f"만료일({subscription_expire_date.date()})까지 프리미엄 기능을 계속 사용할 수 있습니다." if subscription_expire_date else "구독 해지가 완료되었습니다."
     }
