@@ -55,24 +55,6 @@ jobs:
         cache-from: type=local,src=/tmp/.buildx-cache
         cache-to: type=local,dest=/tmp/.buildx-cache-new
 
-    - name: Create target directory
-      uses: appleboy/ssh-action@v1.0.0
-      with:
-        host: ${{ secrets.GCE_HOST }}
-        username: ${{ secrets.GCE_SSH_USER }}
-        key: ${{ secrets.GCE_SSH_KEY }}
-        script: |
-          mkdir -p ~/app-path
-
-    - name: Copy Docker Compose file via SCP
-      uses: appleboy/scp-action@v0.1.7
-      with:
-        host: ${{ secrets.GCE_HOST }}
-        username: ${{ secrets.GCE_SSH_USER }}
-        key: ${{ secrets.GCE_SSH_KEY }}
-        source: "docker-compose.prod.yml"
-        target: "~/app-path"
-
     - name: Deploy to GCE via SSH
       uses: appleboy/ssh-action@v1.0.0
       with:
@@ -87,11 +69,46 @@ jobs:
           ${{ secrets.ENV_PROD }}
           EOF
 
+          cat << 'COMPOSE_EOF' > docker-compose.prod.yml
+          version: "3.9"
+
+          services:
+            redis:
+              image: redis:alpine
+              container_name: redis-prod
+              ports:
+                - "6379:6379"
+              healthcheck:
+                test: ["CMD", "redis-cli", "ping"]
+                interval: 10s
+                timeout: 5s
+                retries: 5
+
+            fastapi:
+              image: us-west1-docker.pkg.dev/resttest-479411/resttest-be/resttest-be:latest
+              container_name: resttest-prod
+
+              command: uvicorn main:app --host 0.0.0.0 --port 8080
+              ports:
+                - "80:8080"
+
+              env_file:
+                - .env
+              environment:
+                - MODE=prod
+                - REDIS_HOST=redis
+                - REDIS_PORT=6379
+
+              depends_on:
+                redis:
+                  condition: service_healthy
+          COMPOSE_EOF
+
           gcloud auth configure-docker ${{ env.ARTIFACT_REGISTRY }} --quiet
 
           docker compose -f docker-compose.prod.yml down
           docker compose -f docker-compose.prod.yml pull
-          
+
           docker compose -f docker-compose.prod.yml run --rm -e MODE=prod fastapi alembic upgrade head
-          
+
           docker compose -f docker-compose.prod.yml up -d
