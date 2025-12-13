@@ -7,8 +7,6 @@ from starlette.requests import Request
 from starlette.responses import Response
 from domain.rate_limit.service.rate_limit_service import RateLimitService
 from domain.auth.service.jwt_service import JWTService
-from domain.auth.service.auth_service import AuthService
-from database.session import AsyncSessionLocal
 
 
 class RateLimitMiddleware(BaseHTTPMiddleware):
@@ -54,19 +52,12 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
             if not user_id:
                 return response
 
-            # 사용자 정보 조회 (membership_tier 확인용)
-            async with AsyncSessionLocal() as db:
-                user = await AuthService.get_user_by_id(db, int(user_id))
-
-                if not user:
-                    return response
-
-                # Rate limit 증가
-                rate_limiter = RateLimitService()
-                try:
-                    await rate_limiter.increment_usage(int(user_id))
-                finally:
-                    await rate_limiter.close()
+            # Rate limit 증가
+            rate_limiter = RateLimitService()
+            try:
+                await rate_limiter.increment_usage(int(user_id))
+            finally:
+                await rate_limiter.close()
 
         except Exception as e:
             # 에러 발생 시 로깅만 하고 응답은 정상 반환
