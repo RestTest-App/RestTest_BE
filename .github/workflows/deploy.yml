@@ -62,6 +62,24 @@ jobs:
         username: ${{ secrets.GCE_SSH_USER }}
         key: ${{ secrets.GCE_SSH_KEY }}
         script: |
+          # 디스크 상태 확인
+          echo "=== Disk usage before cleanup ==="
+          df -h
+          echo ""
+          echo "=== Docker system usage ==="
+          docker system df
+          echo ""
+
+          # 디스크 공간 확보 (볼륨 제외)
+          echo "=== Cleaning up disk space ==="
+          docker system prune -a -f
+          docker builder prune -a -f
+
+          echo ""
+          echo "=== Disk usage after cleanup ==="
+          df -h
+          echo ""
+
           mkdir -p ~/app-path
           cd ~/app-path
 
