@@ -55,6 +55,15 @@ jobs:
         cache-from: type=local,src=/tmp/.buildx-cache
         cache-to: type=local,dest=/tmp/.buildx-cache-new
 
+    - name: Create target directory
+      uses: appleboy/ssh-action@v1.0.0
+      with:
+        host: ${{ secrets.GCE_HOST }}
+        username: ${{ secrets.GCE_SSH_USER }}
+        key: ${{ secrets.GCE_SSH_KEY }}
+        script: |
+          mkdir -p ~/app-path
+
     - name: Copy Docker Compose file via SCP
       uses: appleboy/scp-action@v0.1.7
       with:
