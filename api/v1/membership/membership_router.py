@@ -124,7 +124,13 @@ async def get_payment_history(
                     "id": 1,
                     "membership_tier": "PREMIUM",
                     "payment_amount": 9900,
-                    ...
+                    "payment_method": "TEST",
+                    "payment_status": "SUCCESS",
+                    "subscription_start_date": "2025-11-30T00:00:00",
+                    "subscription_end_date": "2025-12-30T00:00:00",
+                    "created_at": "2025-11-30T00:00:00",
+                    "transaction_id": "TEST_1_1234567890",
+                    "pg_provider": "TEST"
                 }
             ]
         }

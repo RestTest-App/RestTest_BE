@@ -5,7 +5,6 @@ Membership Service
 from datetime import datetime, timedelta
 from sqlalchemy.ext.asyncio import AsyncSession
 from domain.user.entity.user import User
-from domain.user.repository.user_repository import UserRepository
 from domain.payment.entity.payment_history import PaymentHistory
 from domain.payment.repository.payment_history_repository import PaymentHistoryRepository
 
@@ -27,8 +26,8 @@ class MembershipService:
         Args:
             db: Database session
             user: 사용자 객체
-            membership_tier: 업그레이드할 멤버십 등급 (PREMIUM)
-            payment_amount: 결제 금액
+            membership_tier: 업그레이드할 멤버십 등급 (PREMIUM, FREE)
+            payment_amount: 결제 금액 (원)
             duration_days: 구독 기간 (일)
 
         Returns:
@@ -39,7 +38,7 @@ class MembershipService:
                 "subscription_expire_date": datetime
             }
         """
-        previous_tier = user.membership_tier if hasattr(user, 'membership_tier') else 'FREE'
+        previous_tier = getattr(user, 'membership_tier', 'FREE')
 
         # 구독 시작/종료일 설정
         subscription_start = datetime.now()
@@ -47,23 +46,25 @@ class MembershipService:
 
         # User 업데이트
         user.membership_tier = membership_tier
-        user.subscription_expire_date = subscription_end
+        user.subscription_expire_date = subscription_end if membership_tier != 'FREE' else None
 
-        # PaymentHistory 생성
-        payment_history = PaymentHistory(
-            user_id=user.id,
-            membership_tier=membership_tier,
-            payment_amount=payment_amount,
-            payment_method="TEST",  # 테스트용
-            payment_status="SUCCESS",
-            subscription_start_date=subscription_start,
-            subscription_end_date=subscription_end,
-            created_at=subscription_start,
-            transaction_id=f"TEST_{user.id}_{int(subscription_start.timestamp())}",
-            pg_provider="TEST"
-        )
+        # PaymentHistory 생성 (FREE가 아닐 경우)
+        if membership_tier != 'FREE':
+            payment_history = PaymentHistory(
+                user_id=user.id,
+                membership_tier=membership_tier,
+                payment_amount=payment_amount,
+                payment_method="TEST",  # 테스트용
+                payment_status="SUCCESS",
+                subscription_start_date=subscription_start,
+                subscription_end_date=subscription_end,
+                created_at=subscription_start,
+                transaction_id=f"TEST_{user.id}_{int(subscription_start.timestamp())}",
+                pg_provider="TEST"
+            )
 
-        await PaymentHistoryRepository.create(db, payment_history)
+            await PaymentHistoryRepository.create(db, payment_history)
+
         await db.commit()
         await db.refresh(user)
 
@@ -71,7 +72,7 @@ class MembershipService:
             "user_id": user.id,
             "previous_tier": previous_tier,
             "new_tier": membership_tier,
-            "subscription_expire_date": subscription_end
+            "subscription_expire_date": subscription_end if membership_tier != 'FREE' else None
         }
 
     @staticmethod
